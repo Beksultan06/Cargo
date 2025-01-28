@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./assets/style.css">
+    <title>Регистрация завершена</title>
+
+    <style>
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #fff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        }
+
+        .confirmation-container {
+            max-width: 360px;
+            width: 100%;
+            padding: 20px;
+            height: 90%;
+            text-align: center;
+            background-color: #fff;
+            color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .confirmation-logo {
+            max-width: 180px;
+            margin-bottom: 20px;
+            margin-top: 160px;
+        }
+
+        .confirmation-text {
+            font-size: 18px;
+            color: #000;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-button {
+            width: 100%;
+            padding: 15px;
+            background-color: #fdb913;
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .confirmation-button:hover {
+            background-color: #e6a10d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <section class="confirmation-container">
+            <img src="./assets/images/CargosLogo.png" alt="Lider Cargo Logo" class="confirmation-logo">
+            <h1 class="confirmation-text">ВЫ УСПЕШНО ПРОШЛИ РЕГИСТРАЦИЮ 🥳</h1>
+            <button class="confirmation-button" id="finishButton">Завершить</button>
+
+        </section>
+    </div>
+    <script src="./assets/main.js"></script>
+</body>
+
+</html>

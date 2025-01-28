@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма Lider Cargo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            width: 220px;
+        }
+
+        .form-container {
+            width: 90%;
+            max-width: 400px;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-container label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-container input,
+        .form-container select,
+        .form-container button {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .form-container input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #e7329a;
+            border-radius: 5px;
+            background-color: #151515;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-container input::placeholder {
+            color: #fff;
+            opacity: 0.8;
+        }
+
+        .form-container select {
+            background-color: #1a1a1a;
+            border: 1px solid #b1125b;
+            color: #fff;
+            appearance: none;
+        }
+
+        .form-container button {
+            background-color: #f7a600;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 20px;
+        }
+
+        .form-container button:hover {
+            background-color: #e18c00;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0.9;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #8E145D;
+            color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header .icon img {
+            width: 80px;
+            height: 80px;
+        }
+
+        .close-button {
+            font-size: 24px;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            background: transparent;
+            border: none;
+        }
+
+        #modal-message {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo">
+        <img src="./assets/images/CargosLogo.png" alt="Lider Cargo">
+    </div>
+    <div class="form-container">
+        <label for="track-number">Трек номер</label>
+        <input type="text" id="track-number" placeholder="Трек номер" value="496958695">
+
+        <label for="status">Статус</label>
+        <select id="status">
+            <option value="" disabled selected>Статус</option>
+            <option value="1">Статус 1</option>
+            <option value="2">Статус 2</option>
+            <option value="3">Статус 3</option>
+        </select>
+
+        <label for="weight">КГ</label>
+        <input type="text" id="weight" placeholder="Килограм">
+
+        <button onclick="validateForm()">Сохранить</button>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="close-button" onclick="closeModal()">×</button>
+            <div class="modal-header">
+                <div class="icon">
+                    <img src="./assets/images/error.png" alt="Warning Icon">
+                </div>
+            </div>
+            <p id="modal-message">Пожалуйста, заполните все обязательные поля.</p>
+        </div>
+    </div>
+
+    <script>
+        function openModal(message) {
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modal-message');
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+        }
+
+        function validateForm() {
+            const trackNumberInput = document.getElementById('track-number');
+            const statusSelect = document.getElementById('status');
+            const weightInput = document.getElementById('weight');
+
+            if (!trackNumberInput.value.trim() || !statusSelect.value || !weightInput.value.trim()) {
+                openModal('Пожалуйста, заполните все обязательные поля.');
+            } else {
+                alert('Форма сохранена!');
+            }
+        }
+    </script>
+</body>
+
+</html>

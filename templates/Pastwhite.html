@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Добавить Посылку</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            height: 100%;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+        }
+
+        .form-container h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+
+        .form-container input {
+            width: 100%;
+            max-width: 360px;
+            height: 50px;
+            padding: 0 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e7329a;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #000;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .form-container input.focused {
+            background-color: #A40A5E;
+            color: #fff;
+        }
+
+        .form-container label {
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 400;
+            line-height: 18px;
+            color: #000;
+            float: left;
+            width: 25%;
+            font-size: 15px;
+        }
+
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-container .btn-add {
+            background-color: #f89b1b;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .form-container .btn-cancel {
+            background: none;
+            border: 1px solid #f89b1b;
+            color: #f89b1b;
+        }
+
+        .form-container .close-form {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .warning {
+            position: absolute;
+            top: -55px;
+            left: 15px;
+            background-color: #fff;
+            color: #000;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+            white-space: nowrap;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid #e7329a;
+        }
+
+        .warning::before {
+            content: '\26A0';
+            margin-right: 5px;
+            color: #f89b1b;
+            font-size: 16px;
+        }
+
+        .warning::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <span class="close-form" onclick="closeForm()">&times;</span>
+        <h2> Посылки</h2>
+        <div style="position: relative;">
+            <label for="">Трек номер</label>
+            <input id="trackingNumber" type="text" placeholder="Трек номер" onblur="highlightInput()">
+            <div class="warning" id="warning">Заполните это поле.</div>
+        </div>
+        <button class="btn-add" onclick="validateForm()">ДОБАВИТЬ</button>
+        <button class="btn-cancel" onclick="closeForm()">ОТМЕНА</button>
+    </div>
+
+    <script>
+        function validateForm() {
+            const input = document.getElementById('trackingNumber');
+            const warning = document.getElementById('warning');
+
+            if (input.value.trim() === '') {
+                warning.style.display = 'block';
+                input.focus();
+
+                setTimeout(() => {
+                    warning.style.display = 'none';
+                }, 3000);
+            } else {
+                window.location.href = 'mainpasels.html';
+            }
+        }
+
+        function closeForm() {
+            window.location.href = 'mainpasels.html';
+        }
+
+        function highlightInput() {
+            const input = document.getElementById('trackingNumber');
+            if (input.value.trim() !== '') {
+                input.classList.add('focused');
+            } else {
+                input.classList.remove('focused');
+            }
+        }
+    </script>
+</body>
+
+</html>
