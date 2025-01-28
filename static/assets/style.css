@@ -4,7 +4,105 @@
     margin: 0 auto;
     padding: 20px;
 }
+.logo img {
+    max-width: 200px;
+    margin-bottom: 20px;
+}
 
+.login-form {
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 50px;
+
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #fff;
+    text-align: left;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #86015b;
+    color: white;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.password-container .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 25%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.toggle-password svg {
+    width: 22px;
+    height: 19px;
+    fill: white;
+    margin-bottom: 60%;
+}
+
+.login-span {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ffa500;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.login-span:hover {
+    background-color: #ff8c00;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+        margin-top: 50px;
+    }
+
+    .login-form input,
+    .login-span {
+        font-size: 16px;
+        padding: 12px;
+    }
+}
+
+.password-container {
+    position: relative;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
 .registration-form input,
 .registration-form select,
 .registration-form button {

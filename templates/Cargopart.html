@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -774,13 +776,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <img class="logo" src="./assets//images/CargosLogo.png" alt="">
+            <img class="logo" src="{% static './assets//images/CargosLogo.png' %}" alt="">
             <div class="menu-button" onclick="toggleMenu()">☰</div>
 
         </div>
 
         <div class="code-box">
-            <img src="./assets/images/Vector.png" alt="">
+            <img src="{% static './assets/images/Vector.png' %}" alt="">
             <div class="blockbox">
                 <p>Ваш код: </p>
                 <strong>AKB-1457</strong>
@@ -792,7 +794,7 @@
                 <h1 class="address-h1">Адрес склада</h1>
                 <p> 阿AKB-1453 17633321256 广东省佛山市南海区大沥镇黄岐北村公路名雅花园后门中俄物流仓AKB-1453</p>
             </address>
-            <button><img src="./assets/images/save.png" alt="">Скопировать</button>
+            <button><img src="{% static './assets/images/save.png' %}" alt="">Скопировать</button>
         </div>
 
         <div class="tabs">
@@ -857,7 +859,7 @@
 
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <img class="menu-logo" src="./assets/images/CargosLogo.png" alt="">
+            <img class="menu-logo" src="{% static './assets/images/CargosLogo.png' %}" alt="">
             <div class="close-button" onclick="toggleMenu()">×</div>
         </div>
         <ul>
@@ -933,7 +935,7 @@
             <button class="close-button" onclick="closeModal()">×</button>
             <div class="modal-header">
                 <div class="icon">
-                    <img src="./assets/images/error.png" alt="Warning Icon">
+                    <img src="{% static './assets/images/error.png' %}" alt="Warning Icon">
                 </div>
             </div>
             <p id="modal-message">Пожалуйста, заполните все обязательные поля.</p>

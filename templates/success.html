@@ -1,23 +1,25 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./assets/style.css">
+    <link rel="stylesheet" href="{% static './assets/style.css' %}">
     <title>Регистрация завершена</title>
 </head>
 
 <body>
     <div class="wrapper">
         <section class="confirmation-container">
-            <img src="./assets/images/CargosLogo.png" alt="Lider Cargo Logo" class="confirmation-logo">
+            <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo Logo" class="confirmation-logo">
             <h1 class="confirmation-text">ВЫ УСПЕШНО ПРОШЛИ РЕГИСТРАЦИЮ 🥳</h1>
-            <button class="confirmation-button" id="finishButton">Завершить</button>
-
+            <a href="{% url 'cargopart' %}">
+                <button class="confirmation-button">Завершить</button>
+            </a>
         </section>
     </div>
-    <script src="./assets/main.js"></script>
+    <script src="{% static './assets/main.js' %}"></script>
 </body>
-
 </html>
