@@ -130,3 +130,7 @@ def cargopart(request):
 
 def warehouse(request):
     return render(request, "warehouse.html")
+
+
+def mainpasels(request):
+    return render(request, 'mainpasels.html', locals())

@@ -58,7 +58,7 @@
         }
 
         .code-box {
-            background: linear-gradient(90deg, #A40A5E, #f89b1b);
+            background: linear-gradient(90deg, #A40A5E, #F39800);
             display: flex;
             color: #fff;
             padding: 20px;
@@ -83,7 +83,7 @@
         .code-box button {
             margin-top: 10px;
             padding: 8px 12px;
-            background-color: #f89b1b;
+            background-color: #F39800;
             border: none;
             border-radius: 4px;
             color: #fff;
@@ -259,7 +259,7 @@
 
         .address-container button {
             padding: 35px 12px;
-            background-color: #f89b1b;
+            background-color: #F39800;
             border: none;
             border-radius: 4px;
             color: #fff;
@@ -603,7 +603,7 @@
         .light .tabs button {
             flex: 1;
             padding: 10px;
-            background-color: #A40A5E80;
+            background-color: #A40A5E;
             border: none;
             color: #fff;
             font-size: 16px;
@@ -860,7 +860,7 @@
                         stroke-linejoin="round" />
                 </svg>
                 Склад Китай</li>
-            <li onclick="showPage('./mainpasels.html')"><svg class="icon" width="25" height="31" viewBox="0 0 25 31"
+            <li onclick="showPage({% url 'mainpasels' %})"><svg class="icon" width="25" height="31" viewBox="0 0 25 31"
                     fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M11.9855 22.1038L1.5 28.3951V1.16125H23.5V28.3951L13.0145 22.1038L12.5 21.7951L11.9855 22.1038Z"
