@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from app.web_app.models import User, Pvz, Settings
+from .models import User, Pvz
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def register(request):
 
 @login_required(login_url='/')
 def cargopart(request):
-    settings = Settings.objects.latest('id')
+    """Страница личного кабинета (Cargopart), доступна только авторизованным пользователям"""
     user = request.user
     if request.method == "POST":
         print("📩 Форма отправлена!")
@@ -126,3 +126,7 @@ def cargopart(request):
         "pvz_list": Pvz.objects.all(),
     }
     return render(request, "Cargopart.html", locals())
+
+
+def warehouse(request):
+    return render(request, "warehouse.html")

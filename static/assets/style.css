@@ -30,7 +30,7 @@
     margin-bottom: 20px;
     border: none;
     border-radius: 5px;
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: white;
     font-size: 16px;
     box-sizing: border-box;
@@ -111,7 +111,7 @@
     height: 50px;
     padding: 0 15px;
     margin-bottom: 15px;
-    border: 1px solid #e7329a;
+    border: 1px solid #A40A5E;
     border-radius: 8px;
     background-color: #151515;
     color: #fff;
@@ -126,9 +126,9 @@
 
 .registration-form input.filled,
 .registration-form select.filled {
-    background-color: #e7329a;
+    background-color: #A40A5E;
     color: #fff;
-    border-color: #e7329a;
+    border-color: #A40A5E;
 }
 
 .registration-form button {
@@ -268,7 +268,7 @@
     margin-bottom: 20px;
     border: none;
     border-radius: 5px;
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: white;
     font-size: 16px;
 }
@@ -352,7 +352,7 @@ body {
     margin-bottom: 20px;
     border: none;
     border-radius: 5px;
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: white;
 
 }
@@ -383,7 +383,7 @@ button {
 }
 
 .modal-content {
-    background-color: #86015b;
+    background-color: #A40A5E;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
@@ -436,7 +436,7 @@ button {
 }
 
 input {
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: #fff;
 }
 
@@ -522,7 +522,7 @@ body {
 }
 
 .menu li a.active {
-    color: #ff4081;
+    color: #A40A5E;
 }
 
 .theme-toggle {
@@ -568,7 +568,7 @@ body {
 }
 
 .tab-button.active {
-    background: #ff4081;
+    background: #A40A5E;
 }
 
 .tab-content {
@@ -593,7 +593,7 @@ button {
 
 button {
     cursor: pointer;
-    background: #ff4081;
+    background: #A40A5E;
     border: none;
 }
 
