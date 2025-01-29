@@ -13,7 +13,14 @@ def generate_code():
 
 class Pvz(models.Model):
     city = models.CharField(verbose_name="ПВЗ", max_length=100, null=True, blank=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='pvz', null=True, blank=True, verbose_name="Пользователь")
+    user = models.ForeignKey(
+        'User',  # Ссылаемся на модель пользователя
+        on_delete=models.CASCADE, 
+        related_name='pvz', 
+        null=True, 
+        blank=True, 
+        verbose_name="Пользователь"
+    )
 
     def __str__(self):
         return self.city
@@ -21,6 +28,7 @@ class Pvz(models.Model):
     class Meta:
         verbose_name = "ПВЗ"
         verbose_name_plural = "ПВЗ"
+
 
 class User(AbstractUser):
     chat_id = models.BigIntegerField(null=True, blank=True, verbose_name="Chat ID")
@@ -38,7 +46,7 @@ class User(AbstractUser):
         editable=False
     )
     full_name = models.CharField(max_length=255, verbose_name="ФИО")
-    phone_number = models.CharField(max_length=20, verbose_name="Номер телефона")
+    phone_number = models.CharField(max_length=20, unique=True, verbose_name="Номер телефона")
     pickup_point = models.ForeignKey(
         Pvz,
         on_delete=models.CASCADE,
@@ -48,7 +56,7 @@ class User(AbstractUser):
         related_name='users'
     )
     address = models.TextField(verbose_name="Адрес")
-    warehouse_address = models.TextField(verbose_name="Адрес склада")
+    warehouse_address = models.TextField(verbose_name="Адрес склада", blank=True, null=True)
 
     def __str__(self):
         return f"{self.full_name} ({self.id_user})"

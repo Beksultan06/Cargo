@@ -14,9 +14,9 @@ async def start(message: types.Message):
     username = message.from_user.username
     full_name = message.from_user.full_name or "Неизвестно"
 
-    if username is None:
+    if not username:
         await message.answer(
-            "У вас отсутствует username в Telegram. Пожалуйста, установите его в настройках и повторите попытку."
+            "❌ У вас отсутствует username в Telegram.\nПожалуйста, установите его в настройках и повторите попытку."
         )
         return
 
@@ -25,16 +25,22 @@ async def start(message: types.Message):
 
         if user:
             if user.chat_id != chat_id:
-                user.chat_id = chat_id
-                await sync_to_async(user.save)()
-                await message.answer(f"Привет, {user.full_name}! Ваш chat_id обновлен.", reply_markup=get_inline_keyboard(chat_id))
+                await sync_to_async(lambda: User.objects.filter(username=username).update(chat_id=chat_id))()
+                await message.answer(
+                    f"✅ Привет, {user.full_name}!\nВаш chat_id обновлен.",
+                    reply_markup=get_inline_keyboard()
+                )
             else:
-                await message.answer(f"Привет, {user.full_name}! Ваш chat_id уже сохранен.", reply_markup=get_inline_keyboard(chat_id))
+                await message.answer(
+                    f"✅ Привет, {user.full_name}!\nВаш chat_id уже сохранен.",
+                    reply_markup=get_inline_keyboard()
+                )
         else:
             await message.answer(
-                "Вы не зарегистрированы. Пожалуйста, пройдите регистрацию через веб-приложение.",
-                reply_markup=get_inline_keyboard(chat_id)
+                "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
+                reply_markup=get_inline_keyboard(registration=True)
             )
+
     except Exception as e:
-        await message.answer("Произошла ошибка при обработке данных. Попробуйте позже.")
-        logging.error(f"Ошибка: {e}")
+        logging.error(f"Ошибка при сохранении chat_id: {e}")
+        await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
