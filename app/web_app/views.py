@@ -5,7 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from .models import User, Pvz
+from app.web_app.models import User, Pvz, Product
+from app.web_app.pagination import paginate_queryset
 
 logger = logging.getLogger(__name__)
 
@@ -129,8 +130,18 @@ def cargopart(request):
 
 
 def warehouse(request):
-    return render(request, "warehouse.html")
+    query = request.GET.get('q') 
+    products = Product.objects.all()
 
+    if query:
+        products = products.filter(track__icontains=query)  
+
+    page_obj = paginate_queryset(products, request, per_page=15)  # Показываем 10 товаров на странице
+
+    return render(request, "warehouse.html", {
+        "products": page_obj,  
+        "query": query
+    })
 
 def mainpasels(request):
     return render(request, 'mainpasels.html', locals())

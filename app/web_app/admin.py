@@ -34,7 +34,7 @@ class SettingsAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('track weight price status created_at'.split())
-    readonly_fields = ('track', 'price')
+    # readonly_fields = ('track', 'price')
     search_fields = ('track', 'status')
     list_editable = ('status',)
     
