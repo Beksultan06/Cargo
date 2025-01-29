@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -156,7 +158,7 @@
 
 <body>
     <div class="logo">
-        <img src="./assets/images/CargosLogo.png" alt="Lider Cargo">
+        <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo">
     </div>
     <div class="form-container">
         <label for="track-number">Трек номер</label>
@@ -181,7 +183,7 @@
             <button class="close-button" onclick="closeModal()">×</button>
             <div class="modal-header">
                 <div class="icon">
-                    <img src="./assets/images/error.png" alt="Warning Icon">
+                    <img src="{% static './assets/images/error.png' %}" alt="Warning Icon">
                 </div>
             </div>
             <p id="modal-message">Пожалуйста, заполните все обязательные поля.</p>

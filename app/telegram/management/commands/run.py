@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-API_TOKEN = "7446065937:AAF0vetABzvUnhEJXAcN3q_xkNXeUtf6DeM"
+API_TOKEN = "7749815029:AAHu0CjSqNLLjq366h6CtTJYD78_tNOYlxw"
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
