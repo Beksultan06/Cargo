@@ -30,7 +30,7 @@
     margin-bottom: 20px;
     border: none;
     border-radius: 5px;
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: white;
     font-size: 16px;
     box-sizing: border-box;
@@ -67,7 +67,7 @@
     padding: 14px;
     border: none;
     border-radius: 5px;
-    background-color: #ffa500;
+    background-color: #F39800;
     color: #fff;
     font-size: 18px;
     font-weight: bold;
@@ -76,7 +76,7 @@
 }
 
 .login-span:hover {
-    background-color: #ff8c00;
+    background-color: #F39800;
 }
 
 @media (max-width: 600px) {
@@ -111,7 +111,7 @@
     height: 50px;
     padding: 0 15px;
     margin-bottom: 15px;
-    border: 1px solid #e7329a;
+    border: 1px solid #A40A5E;
     border-radius: 8px;
     background-color: #151515;
     color: #fff;
@@ -126,13 +126,13 @@
 
 .registration-form input.filled,
 .registration-form select.filled {
-    background-color: #e7329a;
+    background-color: #A40A5E;
     color: #fff;
-    border-color: #e7329a;
+    border-color: #A40A5E;
 }
 
 .registration-form button {
-    background-color: #fdb913;
+    background-color: #F39800;
     border: none;
     color: #000;
     font-size: 16px;
@@ -223,7 +223,7 @@
 .confirmation-button {
     width: 100%;
     padding: 15px;
-    background-color: #fdb913;
+    background-color: #F39800;
     border: none;
     border-radius: 8px;
     color: #000;
@@ -268,7 +268,7 @@
     margin-bottom: 20px;
     border: none;
     border-radius: 5px;
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: white;
     font-size: 16px;
 }
@@ -298,7 +298,7 @@
     padding: 10px;
     border: none;
     border-radius: 5px;
-    background-color: #ffa500;
+    background-color: #F39800;
     color: #fff;
     font-size: 18px;
     font-weight: bold;
@@ -306,7 +306,7 @@
 }
 
 .login-button:hover {
-    background-color: #ff8c00;
+    background-color: #F39800;
 }
 
 body {
@@ -352,7 +352,7 @@ body {
     margin-bottom: 20px;
     border: none;
     border-radius: 5px;
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: white;
 
 }
@@ -362,7 +362,7 @@ button {
     padding: 10px;
     border: none;
     border-radius: 5px;
-    background-color: #ffa500;
+    background-color: #F39800;
     color: white;
     font-size: 16px;
     font-weight: bold;
@@ -383,7 +383,7 @@ button {
 }
 
 .modal-content {
-    background-color: #86015b;
+    background-color: #A40A5E;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
@@ -436,19 +436,19 @@ button {
 }
 
 input {
-    background-color: #86015b;
+    background-color: #A40A5E;
     color: #fff;
 }
 
 button {
-    background-color: #ffa500;
+    background-color: #F39800;
     font-weight: bold;
     cursor: pointer;
     color: #000;
 }
 
 button:hover {
-    background-color: #ff8c00;
+    background-color: #F39800;
 }
 
 .password-container {
@@ -522,7 +522,7 @@ body {
 }
 
 .menu li a.active {
-    color: #ff4081;
+    color: #A40A5E;
 }
 
 .theme-toggle {
@@ -568,7 +568,7 @@ body {
 }
 
 .tab-button.active {
-    background: #ff4081;
+    background: #A40A5E;
 }
 
 .tab-content {
@@ -593,10 +593,11 @@ button {
 
 button {
     cursor: pointer;
-    background: #ff4081;
+    background: #A40A5E;
     border: none;
 }
 
 button:hover {
     background: #ff0077;
 }
+
