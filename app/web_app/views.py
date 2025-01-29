@@ -1,8 +1,10 @@
+import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from .models import User, Pvz
 
 def register(request):
@@ -58,23 +60,32 @@ def register(request):
 
     return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
 
+logger = logging.getLogger(__name__)
+
 @login_required(login_url='/')
 def cargopart(request):
     """Страница личного кабинета (Cargopart), доступна только авторизованным пользователям"""
     
-    user = request.user  # Получаем текущего пользователя
+    user = request.user  
 
     if request.method == "POST":
+        print("📩 Форма отправлена!")  # Проверяем, пришел ли POST-запрос
+        print("📨 request.POST:", request.POST)  # Выводим все данные запроса
+
         full_name = request.POST.get("full_name", "").strip()
         phone_number = request.POST.get("phone_number", "").strip()
         pvz_id = request.POST.get("pickup_point", "").strip()
         warehouse_address = request.POST.get("warehouse_address", "").strip()
+        password = request.POST.get("password", "").strip()
+        confirm_password = request.POST.get("confirm-password", "").strip()
+
+        logger.info(f"POST data: password={password}, confirm_password={confirm_password}")
 
         # Проверяем, существует ли ПВЗ с указанным ID
         pvz = None
         if pvz_id:
             try:
-                pvz = Pvz.objects.get(id=int(pvz_id))  # Преобразуем ID в число
+                pvz = Pvz.objects.get(id=int(pvz_id))  
             except (Pvz.DoesNotExist, ValueError):
                 messages.error(request, "❌ Выбранный ПВЗ не существует.")
                 return redirect("cargopart")
@@ -84,8 +95,28 @@ def cargopart(request):
         user.phone_number = phone_number
         user.pickup_point = pvz
         user.warehouse_address = warehouse_address
-        user.save()
 
+        # Проверяем, ввел ли пользователь новый пароль
+        if password:
+            if password == confirm_password:
+                if len(password) < 6:
+                    messages.error(request, "❌ Пароль должен содержать минимум 6 символов!")
+                    return redirect("cargopart")
+
+                print("✅ Пароль изменен!")  # Проверяем, выполняется ли смена пароля
+                user.set_password(password)  # Устанавливаем новый пароль
+                user.save()
+                update_session_auth_hash(request, user)  # Чтобы не разлогинивало
+                
+                messages.success(request, "✅ Пароль успешно изменен!")
+                logger.info("Пароль успешно обновлен!")
+                return redirect("cargopart")
+            else:
+                messages.error(request, "❌ Пароли не совпадают!")
+                logger.warning("Ошибка: пароли не совпадают!")
+                return redirect("cargopart")
+
+        user.save()
         messages.success(request, "✅ Данные успешно обновлены!")
         return redirect("cargopart")
 
@@ -93,11 +124,8 @@ def cargopart(request):
     user_data = {
         "full_name": user.full_name,
         "phone_number": user.phone_number,
-        "pickup_point": user.pickup_point.id if user.pickup_point else None,  # Передаем как число
+        "pickup_point": user.pickup_point.id if user.pickup_point else None,  
         "warehouse_address": user.warehouse_address or "",
         "pvz_list": Pvz.objects.all(),
     }
-
-
-
     return render(request, "Cargopart.html", {"user_data": user_data})
