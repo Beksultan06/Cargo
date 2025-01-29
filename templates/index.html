@@ -16,6 +16,7 @@
         </div>
         <form class="registration-form" method="POST" action="{% url 'register' %}">
             {% csrf_token %}
+            <input type="hidden" name="chat_id" value="{{ request.GET.chat_id }}">
             <label for="fullName">ФИО</label>
             <input type="text" id="fullName" name="fullName" placeholder="ФИО (обязательно)" required>
             <label for="phone">Телефон</label>
