@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import User, Pvz
+from app.web_app.models import User, Pvz, Settings, Product
+from django.utils.html import format_html
+
 
 class PvzInline(admin.TabularInline):
     model = Pvz
@@ -18,3 +20,21 @@ class UserAdmin(admin.ModelAdmin):
 class PvzAdmin(admin.ModelAdmin):
     list_display = ('city',)
     search_fields = ('city',)
+    
+@admin.register(Settings)
+class SettingsAdmin(admin.ModelAdmin):
+    
+    def logo_tag(self, obj):
+        return format_html('<img src="{}" width="auto" height="50px" />'.format(obj.logo.url))
+
+    logo_tag.short_description = 'Логотип'
+
+    list_display = ('phone', 'address', 'logo_tag')
+    
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('track weight price status created_at'.split())
+    readonly_fields = ('track', 'price')
+    search_fields = ('track', 'status')
+    list_editable = ('status',)
+    
