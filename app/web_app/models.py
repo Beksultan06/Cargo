@@ -85,21 +85,21 @@ class Manager(models.Model):
     class Meta:
         verbose_name = "Менеджер"
         verbose_name_plural = "Менеджеры"
-        
-        
-        
+
+
+
 class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
     address = models.CharField(max_length=100, verbose_name="Адрес")
     phone = models.CharField(max_length=50, verbose_name="Номер телефона", help_text="Тут нужен рабочий номер склада в Китае")
-    
+
     def __str__(self):
         return str(self.logo)
-    
+
     class Meta:
         verbose_name = "Основная настройка"
         verbose_name_plural = "Основные настройки"
-        
+
 
 class ProductStatus(models.TextChoices):
     WAITING_FOR_ARRIVAL = "waiting", "Ожидает поступления"
@@ -107,8 +107,8 @@ class ProductStatus(models.TextChoices):
     IN_OFFICE = "in_office", "В офисе (Бишкек)"
     COURIER_IN_TRANSIT = "courier_in_transit", "Курьер в пути"
     DELIVERED = "delivered", "Доставлен"
-    UNKNOWN = "unknown", "Неизвестный товар"   
-    
+    UNKNOWN = "unknown", "Неизвестный товар"
+
 class Product(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, verbose_name='Пользователь', null=True, blank=True)
     track = models.CharField(max_length=70, verbose_name="Трек номер")

@@ -64,10 +64,7 @@
         }
 
         .form-container input {
-            width: 100%;
-            height: 40px;
             border: 1px solid #A40A5E;
-            border-radius: 5px;
             background-color: #151515;
             color: #fff;
             font-size: 14px;
@@ -94,10 +91,6 @@
             margin-top: 20px;
         }
 
-        .form-container button:hover {
-            background-color: #F39800;
-        }
-
         .modal {
             display: none;
             position: fixed;
@@ -109,7 +102,6 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            opacity: 0.9;
         }
 
         .modal-content {
@@ -124,18 +116,6 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .modal-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header .icon img {
-            width: 80px;
-            height: 80px;
-        }
-
         .close-button {
             font-size: 24px;
             cursor: pointer;
@@ -146,13 +126,6 @@
             background: transparent;
             border: none;
         }
-
-        #modal-message {
-            font-size: 18px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-top: 10px;
-        }
     </style>
 </head>
 
@@ -162,58 +135,29 @@
     </div>
     <div class="form-container">
         <label for="track-number">Трек номер</label>
-        <input type="text" id="track-number" placeholder="Трек номер" value="496958695">
+        <input type="text" id="track-number" placeholder="Сканируйте штрих-код" autofocus>
 
         <label for="status">Статус</label>
         <select id="status">
             <option value="" disabled selected>Статус</option>
-            <option value="1">Статус 1</option>
-            <option value="2">Статус 2</option>
-            <option value="3">Статус 3</option>
+            <option value="waiting">Ожидает поступления</option>
+            <option value="in_transit">В пути</option>
+            <option value="in_office">В офисе (Бишкек)</option>
+            <option value="courier_in_transit">Курьер в пути</option>
+            <option value="delivered">Доставлен</option>
         </select>
 
         <label for="weight">КГ</label>
-        <input type="text" id="weight" placeholder="Килограм">
+        <input type="number" id="weight" placeholder="Килограм">
 
-        <button onclick="validateForm()">Сохранить</button>
-    </div>
-
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeModal()">×</button>
-            <div class="modal-header">
-                <div class="icon">
-                    <img src="{% static './assets/images/error.png' %}" alt="Warning Icon">
-                </div>
-            </div>
-            <p id="modal-message">Пожалуйста, заполните все обязательные поля.</p>
-        </div>
+        <button onclick="submitForm()">Сохранить</button>
     </div>
 
     <script>
-        function openModal(message) {
-            const modal = document.getElementById('modal');
-            const modalMessage = document.getElementById('modal-message');
-            modalMessage.textContent = message;
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('modal');
-            modal.style.display = 'none';
-        }
-
-        function validateForm() {
-            const trackNumberInput = document.getElementById('track-number');
-            const statusSelect = document.getElementById('status');
-            const weightInput = document.getElementById('weight');
-
-            if (!trackNumberInput.value.trim() || !statusSelect.value || !weightInput.value.trim()) {
-                openModal('Пожалуйста, заполните все обязательные поля.');
-            } else {
-                alert('Форма сохранена!');
-            }
-        }
+        document.addEventListener("DOMContentLoaded", function () {
+            const trackNumberInput = document.getElementById("track-number");
+            trackNumberInput.focus();
+        });
     </script>
 </body>
 

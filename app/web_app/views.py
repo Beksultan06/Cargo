@@ -143,7 +143,7 @@ def scaner(request):
 @login_required
 def manager(request):
     """Страница менеджера с авто-заполнением трек-номера"""
-    track = request.GET.get('track', '')  
+    track = request.GET.get('track', '')
     return render(request, 'manager.html', {'track': track})
 
 @login_required
