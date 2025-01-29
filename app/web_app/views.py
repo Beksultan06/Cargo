@@ -1,4 +1,4 @@
-import logging
+import logging, json
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password
 from django.contrib import messages
@@ -7,6 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
+from .models import User, Pvz, Product
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -145,3 +149,32 @@ def warehouse(request):
 
 def mainpasels(request):
     return render(request, 'mainpasels.html', locals())
+
+def scaner(request):
+    return render(request, "scaner.html", locals())
+
+@login_required
+def manager(request):
+    """Страница менеджера с авто-заполнением трек-номера"""
+    track = request.GET.get('track', '')
+    return render(request, 'manager.html', {'track': track})
+
+@login_required
+def save_track(request):
+    """Сохраняет трек-номер в базу данных"""
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            track = data.get("track")
+
+            if not track:
+                return JsonResponse({"success": False, "error": "Трек-номер отсутствует"}, status=400)
+
+            # Создаём новый продукт с трек-номером
+            product, created = Product.objects.get_or_create(track=track, defaults={"weight": 0})
+
+            return JsonResponse({"success": True, "message": f"Трек-номер {track} сохранён!"})
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Ошибка обработки данных"}, status=400)
+
+    return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)

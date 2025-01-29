@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сканер</title>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -24,98 +25,32 @@
             height: 100vh;
         }
 
-        .scanner-icon {
-            width: 200px;
-            height: 200px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: transparent;
+        .scanner-container {
             position: relative;
-            top: 50px;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 4/3;
+            background: black;
+            display: none;
         }
 
-        .scanner-icon::before,
-        .scanner-icon::after {
-            content: '';
-            width: 100px;
-            height: 5px;
-            background-color: #A40A5E;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .scanner-icon .bars {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .scanner-icon .bar {
-            width: 8px;
-            height: 50px;
-            background-color: #fff;
-            border-radius: 2px;
-        }
-
-        .scanner-icon .corners {
-            position: absolute;
+        video {
             width: 100%;
             height: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: space-between;
-        }
-
-        .scanner-icon .corners div {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #A40A5E;
-            border-radius: 2px;
-        }
-
-        .scanner-icon .corners div.top-left {
-            position: absolute;
-            top: 0;
-            left: 0;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .scanner-icon .corners div.top-right {
-            position: absolute;
-            top: 0;
-            right: 0;
-            border-left: none;
-            border-bottom: none;
-        }
-
-        .scanner-icon .corners div.bottom-left {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            border-right: none;
-            border-top: none;
-        }
-
-        .scanner-icon .corners div.bottom-right {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            border-left: none;
-            border-top: none;
+            object-fit: cover;
+            border-radius: 10px;
         }
 
         .button-container {
-            margin-top: 20%;
-            width: 100%;
+            margin-top: 20px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
-        .scan-button {
+        .scan-button,
+        .stop-button {
             background-color: #F39800;
             border: none;
             border-radius: 8px;
@@ -127,29 +62,122 @@
             text-transform: uppercase;
         }
 
-        .scan-button:hover {
-            background-color: #F39800;
+        .stop-button {
+            display: none;
+            background-color: #ff4c4c;
+        }
+
+        .result-container {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #0f0;
         }
     </style>
 </head>
 
 <body>
-    <div class="scanner-icon">
-        <div class="bars">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <div class="corners">
-            <div class="top-left"></div>
-            <div class="top-right"></div>
-            <div class="bottom-left"></div>
-            <div class="bottom-right"></div>
-        </div>
+    <div class="scanner-container">
+        <video id="video" playsinline></video>
     </div>
+
     <div class="button-container">
-        <button class="scan-button">Сканировать</button>
+        <button class="scan-button" onclick="startScan()">Сканировать</button>
+        <button class="stop-button" onclick="stopScan()">Остановить</button>
     </div>
+
+    <div id="barcode-result" class="result-container"></div>
+
+    <script>
+        let video = document.getElementById('video');
+        let scannerContainer = document.querySelector('.scanner-container');
+        let barcodeResult = document.getElementById('barcode-result');
+        let scanButton = document.querySelector('.scan-button');
+        let stopButton = document.querySelector('.stop-button');
+        let scannerActive = false;
+        let codeReader;
+
+        function startScan() {
+            if (scannerActive) return;
+            scannerActive = true;
+            scannerContainer.style.display = 'block';
+            scanButton.style.display = 'none';
+            stopButton.style.display = 'inline-block';
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                    video.play();
+
+                    codeReader = new ZXing.BrowserBarcodeReader();
+                    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                        if (result) {
+                            let track = result.text;
+                            barcodeResult.innerHTML = `✅ Трек-номер <b>${track}</b> сохранён!`;
+                            sendTrackToServer(track);
+                            stopScan();
+                        }
+                    });
+                })
+                .catch(function (err) {
+                    console.error("Ошибка доступа к камере:", err);
+                    barcodeResult.innerText = "❌ Доступ к камере отклонён!";
+                    stopScan();
+                });
+        }
+
+        function stopScan() {
+            let stream = video.srcObject;
+            if (stream) {
+                let tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+
+            scannerActive = false;
+            scannerContainer.style.display = 'none';
+            scanButton.style.display = 'inline-block';
+            stopButton.style.display = 'none';
+        }
+
+        function sendTrackToServer(track) {
+            fetch('/save_track/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify({ track: track })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        barcodeResult.innerHTML = `✅ ${data.message}`;
+                        setTimeout(() => {
+                            window.location.href = `/manager/?track=${track}`;
+                        }, 1500);
+                    } else {
+                        barcodeResult.innerHTML = `❌ Ошибка: ${data.error}`;
+                    }
+                })
+                .catch(error => {
+                    console.error("Ошибка отправки данных:", error);
+                    barcodeResult.innerText = "❌ Ошибка соединения!";
+                });
+        }
+
+        function getCSRFToken() {
+            let cookieValue = null;
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    cookieValue = cookie.substring('csrftoken='.length, cookie.length);
+                    break;
+                }
+            }
+            return cookieValue;
+        }
+    </script>
 </body>
 
 </html>
