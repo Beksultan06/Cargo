@@ -772,15 +772,12 @@
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
             <img class="logo" src="{% static './assets//images/CargosLogo.png' %}" alt="">
             <div class="menu-button" onclick="toggleMenu()">☰</div>
-
         </div>
-
         <div class="code-box">
             <img src="{% static './assets/images/Vector.png' %}" alt="">
             <div class="blockbox">
@@ -788,7 +785,6 @@
                 <strong>AKB-1457</strong>
             </div>
         </div>
-
         <div class="address-container">
             <address>
                 <h1 class="address-h1">Адрес склада</h1>
@@ -796,22 +792,17 @@
             </address>
             <button><img src="{% static './assets/images/save.png' %}" alt="">Скопировать</button>
         </div>
-
         <div class="tabs">
             <button id="tab-account" class="active" onclick="switchTab('account')">Учетная запись</button>
             <button id="tab-password" onclick="switchTab('password')">Поменять пароль</button>
         </div>
-
         <div class="input-group" id="account-section">
             <form method="POST">
                 {% csrf_token %}
-        
                 <label for="name">ФИО</label>
                 <input type="text" id="name" name="full_name" value="{{ user_data.full_name }}" required>
-        
                 <label for="phone">Телефон</label>
                 <input type="text" id="phone" name="phone_number" value="{{ user_data.phone_number }}" required>
-        
                 <label for="pickup_point">Пункт выдачи заказов (ПВЗ)</label>
                 <select id="pickup_point" name="pickup_point">
                     {% for pvz in user_data.pvz_list %}
@@ -827,28 +818,20 @@
                 <button type="submit" class="btn-save">Сохранить</button>
             </form>
         </div>
-
-
-
         <form method="POST">
             {% csrf_token %}
-        
             <div class="input-group" id="password-section">
                 <label for="password">Пароль</label>
                 <div class="input-wrapper">
                     <input type="password" id="password" name="password" placeholder="Введите новый пароль">
                 </div>
-        
                 <label for="confirm-password">Повторите пароль</label>
                 <div class="input-wrapper">
                     <input type="password" id="confirm-password" name="confirm-password" placeholder="Повторите пароль">
                 </div>
-        
                 <button type="submit" class="btn-save">Сохранить</button>
             </div>
         </form>
-
-
     </div>
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
