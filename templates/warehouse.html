@@ -13,6 +13,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
 
@@ -62,6 +63,8 @@
             background-color: #151515;
             color: #fff;
             font-size: 14px;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .search-container button {
@@ -75,6 +78,8 @@
             cursor: pointer;
             padding: 0 15px;
             margin-top: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .search-container .reset-button {
@@ -83,6 +88,8 @@
             border: 1px solid #F39800;
             color: #F39800;
             margin-right: 10px;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .search-container .btn-past {
@@ -96,9 +103,12 @@
             padding: 15px;
             margin-bottom: 15px;
             color: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .card .label {
+            font-family: Arial, Helvetica, sans-serif;
             font-weight: bold;
             color: #F39800;
             float: left;
@@ -107,6 +117,8 @@
         }
 
         .card .value {
+            font-family: Arial, Helvetica, sans-serif;
+
             color: #fff;
             float: right;
             text-align: right;
@@ -129,6 +141,7 @@
         .search-section {
             margin-top: 20px;
             background-color: #A40A5E;
+            color: #fff;
             border-radius: 8px 8px 0 0;
             padding: 10px;
             text-align: center;
@@ -137,6 +150,7 @@
             position: relative;
             left: 50%;
             transform: translateX(-50%);
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         .sidebar {
@@ -152,6 +166,8 @@
             padding: 20px;
             color: #fff;
             transition: right 0.3s ease;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .sidebar.open {
@@ -166,6 +182,8 @@
             justify-content: space-between;
             align-items: center;
             position: relative;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
 
@@ -179,6 +197,8 @@
             right: 0;
             top: 110%;
             transform: translateY(-50%);
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
 
@@ -244,6 +264,8 @@
             width: 30px;
             height: 30px;
             text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .pagination button:hover {
@@ -372,6 +394,9 @@
         .label{
             font-family: Arial, Helvetica, sans-serif;
         }
+        .labelSearch{
+            font-family: Arial, Helvetica, sans-serif;
+        }
         .moon {
             left: 5px;
             opacity: 0;
@@ -415,6 +440,8 @@
         }
         .light .toggle-button {
             border: 2px solid #000;
+            font-family: Arial, Helvetica, sans-serif;
+
 
         }
         .light .value {
@@ -423,6 +450,8 @@
             text-align: right;
             width: 50%;
             font-size: 13px;
+            font-family: Arial, Helvetica, sans-serif;
+
         }
 
         .light label {
@@ -561,7 +590,7 @@
         </div>
 
         <form action="{% url 'warehouse' %}" method="GET" class="search-container">
-            <label for="trackSearch">Поиск по трек-номеру</label>
+            <label class="labelSearch" for="trackSearch">Поиск по трек-номеру</label>
             <input type="text" name="q" id="trackSearch" placeholder="Введите трек-номер" value="{{ query|default_if_none:'' }}">
         
             <div class="btn-past">

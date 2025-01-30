@@ -3,16 +3,29 @@
     background-color: #151515;
     margin: 0 auto;
     padding: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: auto;
+    height: 100vh;
+    padding-top: 50px;
 }
-.logo img {
+
+.logo {
+
     max-width: 200px;
     margin-bottom: 20px;
+
+}
+
+.visota {
+    height: 500px;
 }
 
 .login-form {
     padding: 20px;
     border-radius: 10px;
     margin-top: 50px;
+    font-family: Arial, Helvetica, sans-serif;
+
 
 }
 
@@ -22,6 +35,8 @@
     font-size: 14px;
     color: #fff;
     text-align: left;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .login-form input {
@@ -34,6 +49,8 @@
     color: white;
     font-size: 16px;
     box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .password-container {
@@ -43,6 +60,8 @@
 .password-container input {
     width: 100%;
     padding-right: 40px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .password-container .toggle-password {
@@ -73,6 +92,8 @@
     font-weight: bold;
     cursor: pointer;
     box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .login-span:hover {
@@ -83,12 +104,14 @@
     .container {
         padding: 10px;
         margin-top: 50px;
+        height: auto;
     }
 
     .login-form input,
     .login-span {
         font-size: 16px;
         padding: 12px;
+        width: auto;
     }
 }
 
@@ -103,6 +126,7 @@
     transform: translateY(-50%);
     cursor: pointer;
 }
+
 .registration-form input,
 .registration-form select,
 .registration-form button {
@@ -118,10 +142,14 @@
     font-size: 14px;
     box-sizing: border-box;
     transition: all 0.3s ease;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .registration-form input::placeholder {
     color: #8f8f8f;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .registration-form input.filled,
@@ -129,6 +157,8 @@
     background-color: #A40A5E;
     color: #fff;
     border-color: #A40A5E;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .registration-form button {
@@ -139,10 +169,13 @@
     font-weight: bold;
     cursor: pointer;
     margin-top: 40px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .registration-form button:hover {
     background-color: #e6a10d;
+
 }
 
 .password-input {
@@ -163,6 +196,8 @@
     transform: translateY(-50%);
     cursor: pointer;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .registration-form label {
@@ -170,6 +205,8 @@
     margin-bottom: 5px;
     font-size: 16px;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .header {
@@ -195,6 +232,8 @@
     top: 0;
     left: 0;
     overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .confirmation-container {
@@ -218,6 +257,8 @@
     font-size: 18px;
     color: #fff;
     margin-bottom: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .confirmation-button {
@@ -231,6 +272,8 @@
     font-weight: bold;
     cursor: pointer;
     margin-top: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .confirmation-button:hover {
@@ -241,6 +284,8 @@
     width: 100%;
     max-width: 400px;
     text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .logo img {
@@ -252,6 +297,8 @@
     background-color: #1c1c1c;
     padding: 20px;
     border-radius: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .login-form label {
@@ -260,6 +307,8 @@
     font-size: 14px;
     color: #fff;
     text-align: left;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .login-form input {
@@ -271,6 +320,8 @@
     background-color: #A40A5E;
     color: white;
     font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .password-container {
@@ -280,6 +331,8 @@
 .password-container input {
     width: calc(100% - 40px);
     display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .password-container .toggle-password {
@@ -291,6 +344,8 @@
     color: white;
     font-size: 18px;
     cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .login-button {
@@ -303,6 +358,8 @@
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .login-button:hover {
@@ -311,18 +368,21 @@
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
     background-color: #1c1c1c;
     color: white;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .registration-container {
     width: 100%;
     max-width: 360px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .logo {
@@ -342,6 +402,8 @@ body {
     display: block;
     margin-bottom: 5px;
     color: white;
+    font-family: Arial, Helvetica, sans-serif;
+
 
 }
 
@@ -354,6 +416,8 @@ body {
     border-radius: 5px;
     background-color: #A40A5E;
     color: white;
+    font-family: Arial, Helvetica, sans-serif;
+
 
 }
 
@@ -367,6 +431,8 @@ button {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .modal {
@@ -380,6 +446,8 @@ button {
     justify-content: center;
     align-items: center;
     opacity: 0.9;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .modal-content {
@@ -390,6 +458,8 @@ button {
     position: relative;
     width: 300px;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .modal .close-button {
@@ -402,6 +472,8 @@ button {
     font-weight: bold;
     cursor: pointer;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .container {
@@ -411,6 +483,8 @@ button {
     padding: 20px;
     box-sizing: border-box;
     text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 label {
@@ -419,6 +493,8 @@ label {
     margin-bottom: 10px;
     font-size: 16px;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 input,
@@ -433,11 +509,15 @@ button {
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 input {
     background-color: #A40A5E;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 button {
@@ -445,6 +525,8 @@ button {
     font-weight: bold;
     cursor: pointer;
     color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 button:hover {
@@ -477,15 +559,18 @@ button:hover {
     height: 30px;
     width: 30px;
     text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
     background-color: #121212;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .app {
@@ -499,6 +584,8 @@ body {
     padding: 20px;
     display: none;
     flex-direction: column;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .sidebar.active {
@@ -523,6 +610,8 @@ body {
 
 .menu li a.active {
     color: #A40A5E;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .theme-toggle {
@@ -565,6 +654,8 @@ body {
     border: none;
     color: #fff;
     cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .tab-button.active {
@@ -589,6 +680,8 @@ button {
     border-radius: 5px;
     background: #222;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+
 }
 
 button {
@@ -600,4 +693,3 @@ button {
 button:hover {
     background: #ff0077;
 }
-
