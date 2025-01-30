@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -26,14 +27,6 @@
             height: 100vh;
         }
 
-        .logo {
-            margin-bottom: 20px;
-        }
-
-        .logo img {
-            width: 220px;
-        }
-
         .form-container {
             width: 90%;
             max-width: 400px;
@@ -43,13 +36,6 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-        }
-
-        .form-container label {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 5px;
-            display: block;
         }
 
         .form-container input,
@@ -63,58 +49,34 @@
             outline: none;
         }
 
-        .form-container input {
-            border: 1px solid #A40A5E;
-            background-color: #151515;
-            color: #fff;
-            font-size: 14px;
-        }
-
-        .form-container input::placeholder {
-            color: #fff;
-            opacity: 0.8;
-        }
-
-        .form-container select {
-            background-color: #1a1a1a;
-            border: 1px solid #b1125b;
-            color: #fff;
-            appearance: none;
-        }
-
         .form-container button {
             background-color: #F39800;
             color: #000;
             font-weight: bold;
             cursor: pointer;
-            text-transform: uppercase;
-            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
-    <div class="logo">
-        <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo">
-    </div>
     <div class="form-container">
-        <label for="track-number">Трек номер</label>
-        <input type="text" id="track-number" placeholder="Сканируйте штрих-код" autofocus>
+        <form id="product-form" method="POST" action="{% url 'save_track' %}">
+            {% csrf_token %}
+            <label for="track-number">Трек номер</label>
+            <input type="text" id="track-number" name="track" readonly>
 
-        <label for="status">Статус</label>
-        <select id="status">
-            <option value="" disabled selected>Статус</option>
-            <option value="waiting">Ожидает поступления</option>
-            <option value="in_transit">В пути</option>
-            <option value="in_office">В офисе (Бишкек)</option>
-            <option value="courier_in_transit">Курьер в пути</option>
-            <option value="delivered">Доставлен</option>
-        </select>
+            <label for="status">Статус</label>
+            <select id="status" name="status" required>
+                {% for status, label in statuses %}
+                <option value="{{ status }}">{{ label }}</option>
+                {% endfor %}
+            </select>
 
-        <label for="weight">КГ</label>
-        <input type="number" id="weight" placeholder="Килограм">
+            <label for="weight">КГ</label>
+            <input type="number" id="weight" name="weight" required>
 
-        <button onclick="submitForm()">Сохранить</button>
+            <button type="submit">Сохранить</button>
+        </form>
     </div>
 
     <script>
@@ -124,10 +86,8 @@
             const track = urlParams.get("track");
 
             if (track) {
-                trackInput.value = track;  // Автозаполнение поля
+                trackInput.value = track;
             }
-
-            trackInput.focus(); // Фокус на поле
         });
     </script>
 </body>

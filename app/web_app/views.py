@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
-from .models import User, Pvz, Product
+from .models import ProductStatus, User, Pvz, Product
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -134,7 +134,7 @@ def cargopart(request):
 
 
 def warehouse(request):
-    query = request.GET.get('q') 
+    query = request.GET.get('q')
     products = Product.objects.all()
 
     if query:
@@ -157,33 +157,35 @@ def scaner(request):
 def manager(request):
     """Страница менеджера с авто-заполнением трек-номера"""
     track = request.GET.get('track', '')
-    return render(request, 'manager.html', {'track': track})
+    statuses = ProductStatus.choices
+    return render(request, 'manager.html', {'track': track, 'statuses': statuses})
 
 @csrf_exempt
 # @login_required
 def save_track(request):
     """Сохраняет трек-номер в базу данных"""
-    logger.info(f"Получен запрос: {request.method}, Пользователь: {request.user}")
-    if not request.user.is_authenticated:
-        logger.warning("Попытка отправки запроса неавторизованным пользователем")
-        return JsonResponse({"success": False, "error": "Вы не авторизованы"}, status=403)
     if request.method == "POST":
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            track = data.get("track")
-            logger.info(f"Получен трек-номер: {track}")
-            if not track:
-                logger.error("Трек-номер отсутствует в запросе")
-                return JsonResponse({"success": False, "error": "Трек-номер отсутствует"}, status=400)
-            product, created = Product.objects.get_or_create(track=track, defaults={"weight": 0})
-            if created:
-                logger.info(f"Трек-номер {track} успешно добавлен")
-            else:
-                logger.info(f"Трек-номер {track} уже существует в базе")
+            track = request.POST.get("track")
+            status = request.POST.get("status")
+            weight = request.POST.get("weight")
 
-            return JsonResponse({"success": True, "message": f"Трек-номер {track} сохранён!"})
-        except json.JSONDecodeError:
-            logger.error("Ошибка обработки JSON")
-            return JsonResponse({"success": False, "error": "Ошибка обработки данных"}, status=400)
-    logger.warning("Попытка доступа через неверный метод запроса")
+            if not track or not status or not weight:
+                return JsonResponse({"success": False, "error": "Заполните все поля"}, status=400)
+
+            weight = float(weight)
+
+            product, created = Product.objects.get_or_create(track=track, defaults={"weight": weight, "status": status, "created_by_manager": True})
+            
+            if not created:
+                product.weight = weight
+                product.status = status
+                product.created_by_manager = True
+                product.save()
+
+            return JsonResponse({"success": True, "message": f"Товар {track} сохранён!"})
+
+        except ValueError:
+            return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
+    
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)

@@ -139,7 +139,7 @@
                         let track = result.text;
                         barcodeResult.innerHTML = `✅ Трек-номер <b>${track}</b> найден!`;
                         barcodeResult.className = "result-container success";
-                        sendTrackToServer(track);
+                        sendTrackToManager(track);
                         stopScan();
                     }
                 });
@@ -164,47 +164,8 @@
             stopButton.style.display = 'none';
         }
 
-        async function sendTrackToServer(track) {
-            barcodeResult.innerHTML = "🔄 Отправка данных...";
-            barcodeResult.className = "result-container loading";
-
-            try {
-                let response = await fetch('http://127.0.0.1:8000/save_track/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken(),
-                    },
-                    body: JSON.stringify({ track: track })
-                });
-
-                if (response.status === 403) {
-                    barcodeResult.innerText = "❌ Вы не авторизованы!";
-                    barcodeResult.className = "result-container error";
-                    setTimeout(() => window.location.href = "/cargopart/", 2000);
-                    return;
-                }
-
-                let data = await response.json();
-                if (data.success) {
-                    barcodeResult.innerHTML = `✅ ${data.message}`;
-                    barcodeResult.className = "result-container success";
-                    setTimeout(() => {
-                        window.location.href = `/manager/?track=${track}`;
-                    }, 1500);
-                } else {
-                    barcodeResult.innerHTML = `❌ Ошибка: ${data.error}`;
-                    barcodeResult.className = "result-container error";
-                }
-            } catch (error) {
-                console.error("Ошибка отправки данных:", error);
-                barcodeResult.innerText = "❌ Ошибка соединения!";
-                barcodeResult.className = "result-container error";
-            }
-        }
-
-        function getCSRFToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        async function sendTrackToManager(track) {
+            window.location.href = `/manager/?track=${track}`;
         }
     </script>
 </body>
