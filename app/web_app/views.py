@@ -169,23 +169,16 @@ def save_track(request):
             track = request.POST.get("track")
             status = request.POST.get("status")
             weight = request.POST.get("weight")
-
             if not track or not status or not weight:
                 return JsonResponse({"success": False, "error": "Заполните все поля"}, status=400)
-
             weight = float(weight)
-
             product, created = Product.objects.get_or_create(track=track, defaults={"weight": weight, "status": status, "created_by_manager": True})
-            
             if not created:
                 product.weight = weight
                 product.status = status
                 product.created_by_manager = True
                 product.save()
-
             return JsonResponse({"success": True, "message": f"Товар {track} сохранён!"})
-
         except ValueError:
             return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
-    
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
