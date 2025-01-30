@@ -178,6 +178,7 @@ def save_track(request):
                 product.status = status
                 product.created_by_manager = True
                 product.save()
+                return redirect("/scanner/")
             return JsonResponse({"success": True, "message": f"Товар {track} сохранён!"})
         except ValueError:
             return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)

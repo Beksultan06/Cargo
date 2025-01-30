@@ -127,8 +127,32 @@
                 trackInput.value = track; // Автозаполнение трек-номера
                 trackInput.readOnly = true; // Блокируем редактирование трек-номера
             }
+
+            // Отправка формы через AJAX с редиректом
+            document.getElementById("product-form").addEventListener("submit", async function (event) {
+                event.preventDefault(); // Предотвращаем стандартную отправку формы
+
+                let formData = new FormData(this);
+                let response = await fetch("{% url 'save_track' %}", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    }
+                });
+
+                let result = await response.json();
+
+                if (result.success) {
+                    // Перенаправляем на страницу сканера после успешного сохранения
+                    window.location.href = "/scanner/";
+                } else {
+                    alert("Ошибка: " + result.error);
+                }
+            });
         });
     </script>
+
 </body>
 
 </html>
