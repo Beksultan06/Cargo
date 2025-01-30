@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -89,9 +90,6 @@
             background-color: #1a1a1a;
             border: 1px solid #b1125b;
             color: #fff;
-            appearance: none;
-            font-family: Arial, Helvetica, sans-serif;
-
         }
 
         .form-container button {
@@ -104,44 +102,6 @@
             font-family: Arial, Helvetica, sans-serif;
 
         }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            font-family: Arial, Helvetica, sans-serif;
-
-        }
-
-        .modal-content {
-            position: relative;
-            background-color: #8E145D;
-            color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .close-button {
-            font-size: 24px;
-            cursor: pointer;
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #fff;
-            background: transparent;
-            border: none;
-        }
     </style>
 </head>
 
@@ -150,31 +110,61 @@
         <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo">
     </div>
     <div class="form-container">
-        <label for="track-number">Трек номер</label>
-        <input type="text" id="track-number" placeholder="Сканируйте штрих-код" autofocus>
+        <form id="product-form" method="POST" action="{% url 'save_track' %}">
+            {% csrf_token %}
+            <label for="track-number">Трек номер</label>
+            <input type="text" id="track-number" name="track" placeholder="Сканируйте штрих-код" required>
 
-        <label for="status">Статус</label>
-        <select id="status">
-            <option value="" disabled selected>Статус</option>
-            <option value="waiting">Ожидает поступления</option>
-            <option value="in_transit">В пути</option>
-            <option value="in_office">В офисе (Бишкек)</option>
-            <option value="courier_in_transit">Курьер в пути</option>
-            <option value="delivered">Доставлен</option>
-        </select>
+            <label for="status">Статус</label>
+            <select id="status" name="status" required>
+                {% for status, label in statuses %}
+                <option value="{{ status }}">{{ label }}</option>
+                {% endfor %}
+            </select>
 
-        <label for="weight">КГ</label>
-        <input type="number" id="weight" placeholder="Килограм">
+            <label for="weight">КГ</label>
+            <input type="number" id="weight" name="weight" placeholder="Килограм" required>
 
-        <button onclick="submitForm()">Сохранить</button>
+            <button type="submit">Сохранить</button>
+        </form>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const trackNumberInput = document.getElementById("track-number");
-            trackNumberInput.focus();
+            const trackInput = document.getElementById("track-number");
+            const urlParams = new URLSearchParams(window.location.search);
+            const track = urlParams.get("track");
+
+            if (track) {
+                trackInput.value = track; // Автозаполнение трек-номера
+                trackInput.readOnly = true; // Блокируем редактирование трек-номера
+            }
+
+            // Отправка формы через AJAX с редиректом
+            document.getElementById("product-form").addEventListener("submit", async function (event) {
+                event.preventDefault(); // Предотвращаем стандартную отправку формы
+
+                let formData = new FormData(this);
+                let response = await fetch("{% url 'save_track' %}", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    }
+                });
+
+                let result = await response.json();
+
+                if (result.success) {
+                    // Перенаправляем на страницу сканера после успешного сохранения
+                    window.location.href = "/scanner/";
+                } else {
+                    alert("Ошибка: " + result.error);
+                }
+            });
         });
     </script>
+
 </body>
 
 </html>

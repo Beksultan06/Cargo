@@ -6,7 +6,7 @@ urlpatterns = [
     path("cargopart/", cargopart, name='cargopart'),
     path("warehouse/", warehouse, name='warehouse'),
     path("mainpasels/", mainpasels, name='mainpasels'),
-    path("scaner/", scaner, name='scaner'),
+    path("scanner/", scaner, name='scanner'),
     path("manager/", manager, name='manager'),
     path("save_track/", save_track, name='save_track'),
 ]

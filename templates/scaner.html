@@ -7,6 +7,8 @@
     <title>Сканер</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- CSRF для Django -->
+
     <style>
         * {
             margin: 0;
@@ -60,6 +62,7 @@
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
+            transition: all 0.3s;
         }
 
         .stop-button {
@@ -71,7 +74,25 @@
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
-            color: #0f0;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            min-width: 250px;
+        }
+
+        .success {
+            background-color: #0a0;
+            color: #fff;
+        }
+
+        .error {
+            background-color: #a00;
+            color: #fff;
+        }
+
+        .loading {
+            background-color: #ffa500;
+            color: #000;
         }
     </style>
 </head>
@@ -82,8 +103,8 @@
     </div>
 
     <div class="button-container">
-        <button class="scan-button" onclick="startScan()">Сканировать</button>
-        <button class="stop-button" onclick="stopScan()">Остановить</button>
+        <button class="scan-button" onclick="startScan()">📷 Сканировать</button>
+        <button class="stop-button" onclick="stopScan()">🛑 Остановить</button>
     </div>
 
     <div id="barcode-result" class="result-container"></div>
@@ -97,33 +118,37 @@
         let scannerActive = false;
         let codeReader;
 
-        function startScan() {
+        async function startScan() {
             if (scannerActive) return;
             scannerActive = true;
             scannerContainer.style.display = 'block';
             scanButton.style.display = 'none';
             stopButton.style.display = 'inline-block';
 
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(function (stream) {
-                    video.srcObject = stream;
-                    video.play();
+            barcodeResult.innerHTML = "⌛ Ожидание сканирования...";
+            barcodeResult.className = "result-container loading";
 
-                    codeReader = new ZXing.BrowserBarcodeReader();
-                    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                        if (result) {
-                            let track = result.text;
-                            barcodeResult.innerHTML = `✅ Трек-номер <b>${track}</b> сохранён!`;
-                            sendTrackToServer(track);
-                            stopScan();
-                        }
-                    });
-                })
-                .catch(function (err) {
-                    console.error("Ошибка доступа к камере:", err);
-                    barcodeResult.innerText = "❌ Доступ к камере отклонён!";
-                    stopScan();
+            try {
+                let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                video.srcObject = stream;
+                video.play();
+
+                codeReader = new ZXing.BrowserBarcodeReader();
+                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                    if (result) {
+                        let track = result.text;
+                        barcodeResult.innerHTML = `✅ Трек-номер <b>${track}</b> найден!`;
+                        barcodeResult.className = "result-container success";
+                        sendTrackToManager(track);
+                        stopScan();
+                    }
                 });
+            } catch (err) {
+                console.error("Ошибка доступа к камере:", err);
+                barcodeResult.innerText = "❌ Доступ к камере отклонён!";
+                barcodeResult.className = "result-container error";
+                stopScan();
+            }
         }
 
         function stopScan() {
@@ -139,43 +164,8 @@
             stopButton.style.display = 'none';
         }
 
-        function sendTrackToServer(track) {
-            fetch('/save_track/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken(),
-                },
-                body: JSON.stringify({ track: track })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        barcodeResult.innerHTML = `✅ ${data.message}`;
-                        setTimeout(() => {
-                            window.location.href = `/manager/?track=${track}`;
-                        }, 1500);
-                    } else {
-                        barcodeResult.innerHTML = `❌ Ошибка: ${data.error}`;
-                    }
-                })
-                .catch(error => {
-                    console.error("Ошибка отправки данных:", error);
-                    barcodeResult.innerText = "❌ Ошибка соединения!";
-                });
-        }
-
-        function getCSRFToken() {
-            let cookieValue = null;
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.startsWith('csrftoken=')) {
-                    cookieValue = cookie.substring('csrftoken='.length, cookie.length);
-                    break;
-                }
-            }
-            return cookieValue;
+        async function sendTrackToManager(track) {
+            window.location.href = `/manager/?track=${track}`;
         }
     </script>
 </body>
