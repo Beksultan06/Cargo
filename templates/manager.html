@@ -27,6 +27,14 @@
             height: 100vh;
         }
 
+        .logo {
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            width: 220px;
+        }
+
         .form-container {
             width: 90%;
             max-width: 400px;
@@ -36,6 +44,13 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+        }
+
+        .form-container label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
         }
 
         .form-container input,
@@ -49,21 +64,44 @@
             outline: none;
         }
 
+        .form-container input {
+            border: 1px solid #A40A5E;
+            background-color: #151515;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-container input::placeholder {
+            color: #fff;
+            opacity: 0.8;
+        }
+
+        .form-container select {
+            background-color: #1a1a1a;
+            border: 1px solid #b1125b;
+            color: #fff;
+        }
+
         .form-container button {
             background-color: #F39800;
             color: #000;
             font-weight: bold;
             cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
+    <div class="logo">
+        <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo">
+    </div>
     <div class="form-container">
         <form id="product-form" method="POST" action="{% url 'save_track' %}">
             {% csrf_token %}
             <label for="track-number">Трек номер</label>
-            <input type="text" id="track-number" name="track" readonly>
+            <input type="text" id="track-number" name="track" placeholder="Сканируйте штрих-код" required>
 
             <label for="status">Статус</label>
             <select id="status" name="status" required>
@@ -73,7 +111,7 @@
             </select>
 
             <label for="weight">КГ</label>
-            <input type="number" id="weight" name="weight" required>
+            <input type="number" id="weight" name="weight" placeholder="Килограм" required>
 
             <button type="submit">Сохранить</button>
         </form>
@@ -86,7 +124,8 @@
             const track = urlParams.get("track");
 
             if (track) {
-                trackInput.value = track;
+                trackInput.value = track; // Автозаполнение трек-номера
+                trackInput.readOnly = true; // Блокируем редактирование трек-номера
             }
         });
     </script>
