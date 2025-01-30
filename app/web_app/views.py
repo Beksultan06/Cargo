@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
+from app.web_app.models import User, Pvz, Product
+from app.web_app.pagination import paginate_queryset
 from .models import User, Pvz, Product
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -132,7 +134,18 @@ def cargopart(request):
 
 
 def warehouse(request):
-    return render(request, "warehouse.html")
+    query = request.GET.get('q') 
+    products = Product.objects.all()
+
+    if query:
+        products = products.filter(track__icontains=query)
+
+    page_obj = paginate_queryset(products, request, per_page=15)
+
+    return render(request, "warehouse.html", {
+        "products": page_obj,
+        "query": query
+    })
 
 def mainpasels(request):
     return render(request, 'mainpasels.html', locals())
@@ -140,28 +153,37 @@ def mainpasels(request):
 def scaner(request):
     return render(request, "scaner.html", locals())
 
-@login_required
+# @login_required
 def manager(request):
     """Страница менеджера с авто-заполнением трек-номера"""
     track = request.GET.get('track', '')
     return render(request, 'manager.html', {'track': track})
 
-@login_required
+@csrf_exempt
+# @login_required
 def save_track(request):
     """Сохраняет трек-номер в базу данных"""
+    logger.info(f"Получен запрос: {request.method}, Пользователь: {request.user}")
+    if not request.user.is_authenticated:
+        logger.warning("Попытка отправки запроса неавторизованным пользователем")
+        return JsonResponse({"success": False, "error": "Вы не авторизованы"}, status=403)
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
+            data = json.loads(request.body.decode('utf-8'))
             track = data.get("track")
-
+            logger.info(f"Получен трек-номер: {track}")
             if not track:
+                logger.error("Трек-номер отсутствует в запросе")
                 return JsonResponse({"success": False, "error": "Трек-номер отсутствует"}, status=400)
-
-            # Создаём новый продукт с трек-номером
             product, created = Product.objects.get_or_create(track=track, defaults={"weight": 0})
+            if created:
+                logger.info(f"Трек-номер {track} успешно добавлен")
+            else:
+                logger.info(f"Трек-номер {track} уже существует в базе")
 
             return JsonResponse({"success": True, "message": f"Трек-номер {track} сохранён!"})
         except json.JSONDecodeError:
+            logger.error("Ошибка обработки JSON")
             return JsonResponse({"success": False, "error": "Ошибка обработки данных"}, status=400)
-
+    logger.warning("Попытка доступа через неверный метод запроса")
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)

@@ -40,15 +40,12 @@ async def start(message: types.Message):
                     reply_markup=get_inline_keyboard()
                 )
         else:
-            # Формируем ссылку для регистрации с chat_id
             registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
             logging.info(f"Отправляем ссылку регистрации: {registration_link}")
-
             await message.answer(
                 "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
                 reply_markup=get_inline_keyboard(registration=True, chat_id=chat_id)
             )
-
     except Exception as e:
         logging.error(f"Ошибка при обработке пользователя: {e}")
         await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.",

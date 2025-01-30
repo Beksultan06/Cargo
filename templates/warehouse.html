@@ -560,63 +560,45 @@
             Посылки на складе в Китае
         </div>
 
-        <div class="search-container">
-            <label for="confirmPassword">Поиск по трекномеру</label>
-
-            <input type="text" placeholder="Поиск">
-
+        <form action="{% url 'warehouse' %}" method="GET" class="search-container">
+            <label for="trackSearch">Поиск по трек-номеру</label>
+            <input type="text" name="q" id="trackSearch" placeholder="Введите трек-номер" value="{{ query|default_if_none:'' }}">
+        
             <div class="btn-past">
-                <button class="reset-button">СБРОСИТЬ</button>
-                <button>ПОИСК</button>
+                <button type="button" class="reset-button" onclick="resetSearch()">СБРОСИТЬ</button>
+                <button type="submit">ПОИСК</button>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-row">
-                <span class="label">ТРЕК НОМЕР:</span>
-                <span class="value">Типыба.</span>
+        </form>
+        
+        {% if products %}
+            {% for x in products %}
+            <div class="card">
+                <div class="card-row">
+                    <span class="label">ТРЕК НОМЕР:</span>
+                    <span class="value">{{ x.track }}</span>
+                </div>
+                <div class="line"></div>
+                <div class="card-row">
+                    <span class="label">ПОЛЬЗОВАТЕЛЬ:</span>
+                    <span class="value">{{ x.user|default:"-" }}</span>
+                </div>
+                <div class="line"></div>
+                <div class="card-row">
+                    <span class="label">СТАТУС:</span>
+                    <span class="value">{{ x.get_status_display }}</span>
+                </div>
+                <div class="line"></div>
+                <div class="card-row">
+                    <span class="label">ДАТА:</span>
+                    <span class="value">{{ x.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+                <div class="line"></div>
             </div>
-            <div class="line"></div>
-            <div class="card-row">
-                <span class="label">ПОЛЬЗОВАТЕЛЬ:</span>
-                <span class="value">Джоробоев Билол (АКБ-1453)</span>
-            </div>
-            <div class="line"></div>
-            <div class="card-row">
-                <span class="label">СТАТУС:</span>
-                <span class="value">Ожидает поступления</span>
-            </div>
-            <div class="line"></div>
-            <div class="card-row">
-                <span class="label">ДАТА:</span>
-                <span class="value">21-01-2025 13:52</span>
-            </div>
-            <div class="line"></div>
-        </div>
-
-
-        <div class="card">
-            <div class="card-row">
-                <span class="label">ТРЕК НОМЕР:</span>
-                <span class="value">Типыба.</span>
-            </div>
-            <div class="line"></div>
-            <div class="card-row">
-                <span class="label">ПОЛЬЗОВАТЕЛЬ:</span>
-                <span class="value">Джоробоев Билол (АКБ-1453)</span>
-            </div>
-            <div class="line"></div>
-            <div class="card-row">
-                <span class="label">СТАТУС:</span>
-                <span class="value">Ожидает поступления</span>
-            </div>
-            <div class="line"></div>
-            <div class="card-row">
-                <span class="label">ДАТА:</span>
-                <span class="value">21-01-2025 13:52</span>
-            </div>
-            <div class="line"></div>
-        </div>
-    </div>
+            {% endfor %}
+        {% else %}
+            <p>Ничего не найдено.</p>
+        {% endif %}
+        
 
     <div class="sidebar" id="sidebar">
         <h2>
@@ -692,13 +674,7 @@
             </button>
         </div>
     </div>
-    <div class="pagination">
-        <button class="prev" onclick="prevPage()">&lt;</button>
-        <div class="page-numbers"></div>
-        <button class="next" onclick="nextPage()">&gt;</button>
-    </div>
-
-
+    {% include 'pagination.html' with page_obj=product_list sort=sort %}
 
     <script>
         function toggleSidebar() {
@@ -724,56 +700,6 @@
 
         let currentPage = 1;
 
-        function renderPagination() {
-            const pageNumbersContainer = document.querySelector(".page-numbers");
-            pageNumbersContainer.innerHTML = "";
-
-            const screenWidth = window.innerWidth;
-            let visiblePages = 7;
-
-            if (screenWidth <= 1024) visiblePages = 9;
-            if (screenWidth <= 600) visiblePages = 6;
-            if (screenWidth <= 300) visiblePages = 3;
-
-            const half = Math.floor(visiblePages / 2);
-            let startPage = Math.max(1, currentPage - half);
-            let endPage = Math.min(totalPages, startPage + visiblePages - 1);
-
-            if (endPage - startPage + 1 < visiblePages) {
-                startPage = Math.max(1, endPage - visiblePages + 1);
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                const button = document.createElement("button");
-                button.textContent = i;
-                button.className = i === currentPage ? "active" : "";
-                button.onclick = () => changePage(i);
-                pageNumbersContainer.appendChild(button);
-            }
-        }
-
-        function changePage(page) {
-            currentPage = page;
-            renderPagination();
-        }
-
-        function prevPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderPagination();
-            }
-        }
-
-        function nextPage() {
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderPagination();
-            }
-        }
-
-        window.onload = renderPagination;
-
-        window.onresize = renderPagination;
 
 
         function showPage(url) {
@@ -816,7 +742,13 @@
         }
 
     </script>
-
+    <script>
+        function resetSearch() {
+            let url = new URL(window.location.href);
+            url.searchParams.delete("q");  // Удаляем параметр `q`
+            window.location.href = url.href;  // Обновляем страницу без параметра
+        }
+    </script>
 </body>
 
 </html>

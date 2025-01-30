@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-SITE_BASE_URL="https://4730-158-181-248-104.ngrok-free.app"
+SITE_BASE_URL="https://1440-158-181-248-104.ngrok-free.app"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -41,13 +41,16 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'corsheaders',
 
     # app
     "app.web_app",
     "app.telegram",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["https://4730-158-181-248-104.ngrok-free.app"]
+CSRF_TRUSTED_ORIGINS = ["https://1440-158-181-248-104.ngrok-free.app"]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 LOGIN_URL = '/cargopart/'
 
@@ -71,6 +74,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -185,3 +189,22 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 AUTH_USER_MODEL = 'web_app.User'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
