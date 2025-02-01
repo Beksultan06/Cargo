@@ -92,6 +92,7 @@ class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
     address = models.CharField(max_length=100, verbose_name="Адрес")
     phone = models.CharField(max_length=50, verbose_name="Номер телефона", help_text="Тут нужен рабочий номер склада в Китае")
+    price = models.FloatField(verbose_name='Цена за кг')
 
     def __str__(self):
         return str(self.logo)

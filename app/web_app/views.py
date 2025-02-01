@@ -147,9 +147,6 @@ def warehouse(request):
         "query": query
     })
 
-def mainpasels(request):
-    return render(request, 'mainpasels.html', locals())
-
 def scaner(request):
     return render(request, "scaner.html", locals())
 
@@ -183,3 +180,7 @@ def save_track(request):
         except ValueError:
             return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+
+
+def mainpasels(request):
+    return render(request, "mainpasels.html", locals())
