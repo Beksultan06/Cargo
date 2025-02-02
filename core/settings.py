@@ -52,7 +52,7 @@ INSTALLED_APPS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://a81c-158-181-248-104.ngrok-free.app"
+    "https://76eb-158-181-248-104.ngrok-free.app"
 ]
 
 LOGIN_URL = '/cargopart/'

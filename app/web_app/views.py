@@ -140,7 +140,7 @@ def warehouse(request):
     if query:
         products = products.filter(track__icontains=query)  
 
-    page_obj = paginate_queryset(products, request, per_page=15)  # Показываем 10 товаров на странице
+    page_obj = paginate_queryset(products, request, per_page=1)  # Показываем 10 товаров на странице
 
     return render(request, "warehouse.html", {
         "products": page_obj,  
