@@ -1,5 +1,6 @@
 from django.urls import path
-from app.web_app.views import register, cargopart, warehouse, mainpasels, scaner, save_track, manager, ParcelView
+from app.web_app.views import register, cargopart, warehouse, mainpasels, scaner, save_track, manager,\
+login_view, ParcelView
 
 urlpatterns = [
     path("", register, name='register'),
@@ -12,5 +13,5 @@ urlpatterns = [
     path("scanner/", scaner, name='scanner'),
     path("manager/", manager, name='manager'),
     path("save_track/", save_track, name='save_track'),
-
+    path("login/", login_view, name='login'),
 ]

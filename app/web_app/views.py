@@ -1,4 +1,4 @@
-import logging, json
+import logging, json, re
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password
 from django.contrib import messages
@@ -7,27 +7,25 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
-from .models import ProductStatus, User, Pvz, Product
+from .models import ProductStatus, Settings, User, Pvz, Product
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from app.web_app.forms import TrackingSearchForm
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.middleware.csrf import get_token
 
 logger = logging.getLogger(__name__)
 
 def register(request):
     chat_id = request.GET.get('chat_id') or request.POST.get('chat_id')
-
     logging.info(f"Полученный chat_id в register: {chat_id}")
-
     if chat_id:
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
             login(request, user)
             return redirect('cargopart')
-
     if request.method == 'POST':
         full_name = request.POST.get('fullName', '').strip()
         phone = request.POST.get('phone', '').strip()
@@ -35,25 +33,20 @@ def register(request):
         address = request.POST.get('address', '').strip()
         password = request.POST.get('password', '').strip()
         confirm_password = request.POST.get('confirmPassword', '').strip()
-
         if not full_name or not phone or not pvz_id or not address or not password or not confirm_password:
             messages.error(request, '❌ Все поля обязательны для заполнения.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         if password != confirm_password:
             messages.error(request, '❌ Пароли не совпадают.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         try:
             pvz = Pvz.objects.get(id=pvz_id)
         except Pvz.DoesNotExist:
             messages.error(request, '❌ Выбранный ПВЗ не существует.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         if User.objects.filter(phone_number=phone).exists():
             messages.error(request, '❌ Пользователь с таким номером телефона уже зарегистрирован.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         try:
             new_user = User.objects.create(
                 full_name=full_name,
@@ -64,15 +57,12 @@ def register(request):
                 password=make_password(password),
                 chat_id=chat_id
             )
-
             logging.info(f"Создан новый пользователь {new_user.username} с chat_id: {new_user.chat_id}")
-
             user = authenticate(request, username=phone, password=password)
             if user:
                 login(request, user)
                 messages.success(request, '✅ Регистрация и авторизация прошли успешно!')
                 return redirect('cargopart')
-
         except Exception as e:
             logging.error(f"Ошибка при регистрации: {e}")
             messages.error(request, f'❌ Ошибка при регистрации: {e}')
@@ -80,10 +70,26 @@ def register(request):
 
     return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
 
+def login_view(request):
+    if request.method == "POST":
+        phone_number = request.POST.get("phone", "").strip().replace(" ", "").replace("-", "")
+        password = request.POST.get("password", "").strip()
+        phone_number = "+996" + phone_number[-9:]
+        if not re.match(r"^\+996\d{9}$", phone_number):
+            return JsonResponse({"status": "error", "message": "Введите корректный номер в формате +996 XXX XXX XXX"}, status=400)
+        user = authenticate(request, phone_number=phone_number, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({"status": "success", "redirect_url": "/cargopart/"})
+        else:
+            return JsonResponse({"status": "error", "message": "Неверный номер телефона или пароль"}, status=400)
+    csrf_token = get_token(request)
+    return render(request, "enter.html", {"csrf_token": csrf_token})
 
 @login_required(login_url='/')
 def cargopart(request):
     user = request.user
+
     if request.method == "POST":
         print("📩 Форма отправлена!")
         print("📨 request.POST:", request.POST)
@@ -95,6 +101,7 @@ def cargopart(request):
         password = request.POST.get("password", "").strip()
         confirm_password = request.POST.get("confirm-password", "").strip()
         logger.info(f"POST data: password={password}, confirm_password={confirm_password}")
+
         pvz = None
         if pvz_id:
             try:
@@ -102,10 +109,12 @@ def cargopart(request):
             except (Pvz.DoesNotExist, ValueError):
                 messages.error(request, "❌ Выбранный ПВЗ не существует.")
                 return redirect("cargopart")
+
         user.full_name = full_name
         user.phone_number = phone_number
         user.pickup_point = pvz
         user.warehouse_address = warehouse_address
+
         if password:
             if password == confirm_password:
                 if len(password) < 6:
@@ -122,17 +131,31 @@ def cargopart(request):
                 messages.error(request, "❌ Пароли не совпадают!")
                 logger.warning("Ошибка: пароли не совпадают!")
                 return redirect("cargopart")
+
         user.save()
         messages.success(request, "✅ Данные успешно обновлены!")
         return redirect("cargopart")
+
+    # Получаем объект настроек (если он есть)
+    settings = Settings.objects.first()
+
+    # Формируем user_data
     user_data = {
         "full_name": user.full_name,
         "phone_number": user.phone_number,
         "pickup_point": user.pickup_point.id if user.pickup_point else None,
         "warehouse_address": user.warehouse_address or "",
         "pvz_list": Pvz.objects.all(),
+        "id_user": user.id_user,
     }
-    return render(request, "Cargopart.html", locals())
+
+    # Передаем `user_data`, `user` и `settings` в шаблон
+    return render(request, "Cargopart.html", {
+        "user_data": user_data,
+        "user": user,
+        "settings": settings,
+    })
+
 
 
 def warehouse(request):
