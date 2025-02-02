@@ -87,11 +87,11 @@ class Manager(models.Model):
         verbose_name_plural = "Менеджеры"
 
 
-
 class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
     address = models.CharField(max_length=100, verbose_name="Адрес")
     phone = models.CharField(max_length=50, verbose_name="Номер телефона", help_text="Тут нужен рабочий номер склада в Китае")
+    price = models.FloatField(verbose_name='Цена за кг')  # Цена за кг
 
     def __str__(self):
         return str(self.logo)
@@ -109,6 +109,7 @@ class ProductStatus(models.TextChoices):
     DELIVERED = "delivered", "Доставлен"
     UNKNOWN = "unknown", "Неизвестный товар"
 
+
 class Product(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, verbose_name='Пользователь', null=True, blank=True)
     track = models.CharField(max_length=70, verbose_name="Трек номер")
@@ -124,8 +125,12 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания", null=True)
 
     def save(self, *args, **kwargs):
-        # Автоматический расчет цены (вес * 3$)
-        self.price = round(self.weight * 3, 2) if self.weight else 0
+        # Получаем цену за кг из Settings
+        settings = Settings.objects.first()
+        price_per_kg = settings.price if settings else 0  # Если Settings пуст, ставим 3$ по умолчанию
+
+        # Автоматический расчет цены (вес * цена за кг)
+        self.price = round(self.weight * price_per_kg, 2) if self.weight else 0
 
         if not self.pk:
             # Проверяем, был ли товар добавлен менеджером
@@ -134,10 +139,9 @@ class Product(models.Model):
             else:
                 # Если товар добавлен пользователем
                 existing_product = Product.objects.filter(track=self.track).exists()
-                if existing_product:
-                    pass  # Если товар уже в БД, статус не меняем
-                else:
+                if not existing_product:
                     self.status = ProductStatus.WAITING_FOR_ARRIVAL
+
         super().save(*args, **kwargs)
 
     def update_status(self):

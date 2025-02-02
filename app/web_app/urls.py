@@ -9,4 +9,5 @@ urlpatterns = [
     path("scanner/", scaner, name='scanner'),
     path("manager/", manager, name='manager'),
     path("save_track/", save_track, name='save_track'),
+
 ]

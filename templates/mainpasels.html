@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -525,7 +527,7 @@
 <body>
     <div class="header">
         <div class="logo">
-            <img src="./assets/images/CargosLogo.png" alt="Lider Cargo">
+            <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo">
         </div>
         <div class="menu-icon" onclick="toggleMenu()">☰</div>
 
@@ -570,7 +572,7 @@
     </div>
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <img class="menu-logo" src="./assets/images/CargosLogo.png" alt="">
+            <img class="menu-logo" src="{% static './assets/images/CargosLogo.png' %}" alt="">
             <button class="close-button" onclick="toggleMenu()">×</button>
         </div>
         <ul>
@@ -688,7 +690,6 @@
             input.value = "";
             toggleResetButton();
         }
-
         // Закрытие меню при клике вне его
         document.addEventListener('click', function (event) {
             const sidebar = document.getElementById('sideMenu');
@@ -700,8 +701,6 @@
                 }
             }
         });
-
-
         // Функция для перехода на другую страницу
         function showPage(url) {
             window.location.href = url;
@@ -711,7 +710,6 @@
         function logout() {
             window.location.href = 'enter.html';
         }
-
         // Обработка переключения темы
         const themeToggle = document.getElementById('themeToggle');
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -736,7 +734,6 @@
             toggleButton.classList.toggle('dark-mode');
         }
     </script>
-
 
 
 </body>

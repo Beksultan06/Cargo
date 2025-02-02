@@ -22,8 +22,8 @@ def register(request):
     if chat_id:
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
-            login(request, user)  # ✅ Автоматически логиним пользователя
-            return redirect('cargopart')  # ✅ Перенаправляем на личный кабинет
+            login(request, user)
+            return redirect('cargopart')
 
     if request.method == 'POST':
         full_name = request.POST.get('fullName', '').strip()
@@ -80,7 +80,6 @@ def register(request):
 
 @login_required(login_url='/')
 def cargopart(request):
-    """Страница личного кабинета (Cargopart), доступна только авторизованным пользователям"""
     user = request.user
     if request.method == "POST":
         print("📩 Форма отправлена!")
@@ -147,15 +146,11 @@ def warehouse(request):
         "query": query
     })
 
-def mainpasels(request):
-    return render(request, 'mainpasels.html', locals())
-
 def scaner(request):
     return render(request, "scaner.html", locals())
 
 # @login_required
 def manager(request):
-    """Страница менеджера с авто-заполнением трек-номера"""
     track = request.GET.get('track', '')
     statuses = ProductStatus.choices
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
@@ -163,7 +158,6 @@ def manager(request):
 @csrf_exempt
 # @login_required
 def save_track(request):
-    """Сохраняет трек-номер в базу данных"""
     if request.method == "POST":
         try:
             track = request.POST.get("track")
@@ -183,3 +177,6 @@ def save_track(request):
         except ValueError:
             return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+
+def mainpasels(request):
+    return render(request, "mainpasels.html", locals())
