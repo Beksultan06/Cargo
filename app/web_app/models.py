@@ -59,7 +59,6 @@ class User(AbstractUser):
     address = models.TextField(verbose_name="Адрес")
     warehouse_address = models.TextField(verbose_name="Адрес склада", blank=True, null=True)
 
-    USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = []  # `username` не нужен, так как используем `phone_number`
 
     def __str__(self):

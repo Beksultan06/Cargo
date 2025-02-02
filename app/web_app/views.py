@@ -74,15 +74,12 @@ def login_view(request):
         phone_number = "+996" + phone_number[-9:]
         if not re.match(r"^\+996\d{9}$", phone_number):
             return JsonResponse({"status": "error", "message": "Введите корректный номер в формате +996 XXX XXX XXX"}, status=400)
-
         user = authenticate(request, phone_number=phone_number, password=password)
-
         if user is not None:
             login(request, user)
             return JsonResponse({"status": "success", "redirect_url": "/cargopart/"})
         else:
             return JsonResponse({"status": "error", "message": "Неверный номер телефона или пароль"}, status=400)
-
     csrf_token = get_token(request)
     return render(request, "enter.html", {"csrf_token": csrf_token})
 
