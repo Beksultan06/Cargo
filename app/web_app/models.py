@@ -59,6 +59,9 @@ class User(AbstractUser):
     address = models.TextField(verbose_name="Адрес")
     warehouse_address = models.TextField(verbose_name="Адрес склада", blank=True, null=True)
 
+    USERNAME_FIELD = "phone_number"
+    REQUIRED_FIELDS = []  # `username` не нужен, так как используем `phone_number`
+
     def __str__(self):
         return f"{self.full_name} ({self.id_user})"
 
@@ -92,6 +95,8 @@ class Settings(models.Model):
     address = models.CharField(max_length=100, verbose_name="Адрес")
     phone = models.CharField(max_length=50, verbose_name="Номер телефона", help_text="Тут нужен рабочий номер склада в Китае")
     price = models.FloatField(verbose_name='Цена за кг')  # Цена за кг
+    ista = models.URLField(verbose_name='Инстаграмм', blank=True, null=True)
+    watapp = models.URLField(verbose_name='Ватсап', blank=True, null=True)
 
     def __str__(self):
         return str(self.logo)
@@ -145,7 +150,6 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     def update_status(self):
-        """Обновляет статус товара на основе условий"""
         if self.status == ProductStatus.WAITING_FOR_ARRIVAL and self.track:
             self.status = ProductStatus.IN_TRANSIT
         elif self.status == ProductStatus.IN_TRANSIT:
@@ -162,7 +166,6 @@ class Product(models.Model):
         self.save()
 
     def set_delivered(self):
-        """Устанавливает статус 'Доставлен' через 2 часа"""
         if self.status == ProductStatus.COURIER_IN_TRANSIT:
             self.status = ProductStatus.DELIVERED
             self.save()

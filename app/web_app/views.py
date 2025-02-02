@@ -1,4 +1,4 @@
-import logging, json
+import logging, json, re
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password
 from django.contrib import messages
@@ -11,20 +11,18 @@ from .models import ProductStatus, User, Pvz, Product
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.middleware.csrf import get_token
 
 logger = logging.getLogger(__name__)
 
 def register(request):
     chat_id = request.GET.get('chat_id') or request.POST.get('chat_id')
-
     logging.info(f"Полученный chat_id в register: {chat_id}")
-
     if chat_id:
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
             login(request, user)
             return redirect('cargopart')
-
     if request.method == 'POST':
         full_name = request.POST.get('fullName', '').strip()
         phone = request.POST.get('phone', '').strip()
@@ -32,25 +30,20 @@ def register(request):
         address = request.POST.get('address', '').strip()
         password = request.POST.get('password', '').strip()
         confirm_password = request.POST.get('confirmPassword', '').strip()
-
         if not full_name or not phone or not pvz_id or not address or not password or not confirm_password:
             messages.error(request, '❌ Все поля обязательны для заполнения.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         if password != confirm_password:
             messages.error(request, '❌ Пароли не совпадают.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         try:
             pvz = Pvz.objects.get(id=pvz_id)
         except Pvz.DoesNotExist:
             messages.error(request, '❌ Выбранный ПВЗ не существует.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         if User.objects.filter(phone_number=phone).exists():
             messages.error(request, '❌ Пользователь с таким номером телефона уже зарегистрирован.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
-
         try:
             new_user = User.objects.create(
                 full_name=full_name,
@@ -61,15 +54,12 @@ def register(request):
                 password=make_password(password),
                 chat_id=chat_id
             )
-
             logging.info(f"Создан новый пользователь {new_user.username} с chat_id: {new_user.chat_id}")
-
             user = authenticate(request, username=phone, password=password)
             if user:
                 login(request, user)
                 messages.success(request, '✅ Регистрация и авторизация прошли успешно!')
                 return redirect('cargopart')
-
         except Exception as e:
             logging.error(f"Ошибка при регистрации: {e}")
             messages.error(request, f'❌ Ошибка при регистрации: {e}')
@@ -77,6 +67,24 @@ def register(request):
 
     return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
 
+def login_view(request):
+    if request.method == "POST":
+        phone_number = request.POST.get("phone", "").strip().replace(" ", "").replace("-", "")
+        password = request.POST.get("password", "").strip()
+        phone_number = "+996" + phone_number[-9:]
+        if not re.match(r"^\+996\d{9}$", phone_number):
+            return JsonResponse({"status": "error", "message": "Введите корректный номер в формате +996 XXX XXX XXX"}, status=400)
+
+        user = authenticate(request, phone_number=phone_number, password=password)
+
+        if user is not None:
+            login(request, user)
+            return JsonResponse({"status": "success", "redirect_url": "/cargopart/"})
+        else:
+            return JsonResponse({"status": "error", "message": "Неверный номер телефона или пароль"}, status=400)
+
+    csrf_token = get_token(request)
+    return render(request, "enter.html", {"csrf_token": csrf_token})
 
 @login_required(login_url='/')
 def cargopart(request):
@@ -180,3 +188,4 @@ def save_track(request):
 
 def mainpasels(request):
     return render(request, "mainpasels.html", locals())
+
