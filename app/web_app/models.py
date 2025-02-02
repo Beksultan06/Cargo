@@ -3,11 +3,16 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
 import random, string
 from threading import Timer
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
-def generate_user_id():
-    letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-    digits = ''.join(random.choices(string.digits, k=3))
-    return letters + digits
+def generate_code_from_pvz(instance):
+    """Генерирует код в формате <Первые 3 буквы ПВЗ>-<6 случайных цифр>"""
+    if instance.pickup_point and instance.pickup_point.city:
+        city_prefix = instance.pickup_point.city[:3].upper()
+        random_digits = ''.join(random.choices(string.digits, k=6))
+        return f"{city_prefix}-{random_digits}"
+    return None
 
 def generate_code():
     return ''.join(random.choices(string.digits, k=10))
@@ -15,7 +20,7 @@ def generate_code():
 class Pvz(models.Model):
     city = models.CharField(verbose_name="ПВЗ", max_length=100, null=True, blank=True)
     user = models.ForeignKey(
-        'User',  # Ссылаемся на модель пользователя
+        'User',
         on_delete=models.CASCADE, 
         related_name='pvz', 
         null=True, 
@@ -34,17 +39,18 @@ class Pvz(models.Model):
 class User(AbstractUser):
     chat_id = models.BigIntegerField(null=True, blank=True, verbose_name="Chat ID")
     id_user = models.CharField(
-        max_length=6,
+        max_length=10,
         unique=True,
-        default=generate_user_id,
-        editable=False,
+        blank=True,
+        null=True,
         verbose_name='Айди'
     )
     code = models.CharField(
         max_length=10,
         unique=True,
-        default=generate_code,
-        editable=False
+        blank=True,
+        null=True,
+        verbose_name="Код"
     )
     full_name = models.CharField(max_length=255, verbose_name="ФИО")
     phone_number = models.CharField(max_length=20, unique=True, verbose_name="Номер телефона")
@@ -59,7 +65,18 @@ class User(AbstractUser):
     address = models.TextField(verbose_name="Адрес")
     warehouse_address = models.TextField(verbose_name="Адрес склада", blank=True, null=True)
 
-    REQUIRED_FIELDS = []  # `username` не нужен, так как используем `phone_number`
+    REQUIRED_FIELDS = []
+
+    def save(self, *args, **kwargs):
+        """Автоматически генерируем `code` и `id_user` перед сохранением"""
+        if self.pickup_point:
+            new_code = generate_code_from_pvz(self)
+            if not self.code:
+                self.code = new_code
+            if not self.id_user:
+                self.id_user = new_code
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.full_name} ({self.id_user})"
@@ -67,6 +84,15 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+
+@receiver(pre_save, sender=User)
+def update_code_on_pvz_change(sender, instance, **kwargs):
+    """Обновляет code и id_user, если пользователь сменил ПВЗ"""
+    if instance.pickup_point:   
+        new_code = generate_code_from_pvz(instance)
+        instance.code = new_code
+        instance.id_user = new_code
 
 class Manager(models.Model):
     username = models.CharField(max_length=155, verbose_name='Имя пользователя')

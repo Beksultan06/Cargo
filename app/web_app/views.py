@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
-from .models import ProductStatus, User, Pvz, Product
+from .models import ProductStatus, Settings, User, Pvz, Product
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -86,6 +86,7 @@ def login_view(request):
 @login_required(login_url='/')
 def cargopart(request):
     user = request.user
+
     if request.method == "POST":
         print("📩 Форма отправлена!")
         print("📨 request.POST:", request.POST)
@@ -97,6 +98,7 @@ def cargopart(request):
         password = request.POST.get("password", "").strip()
         confirm_password = request.POST.get("confirm-password", "").strip()
         logger.info(f"POST data: password={password}, confirm_password={confirm_password}")
+
         pvz = None
         if pvz_id:
             try:
@@ -104,10 +106,12 @@ def cargopart(request):
             except (Pvz.DoesNotExist, ValueError):
                 messages.error(request, "❌ Выбранный ПВЗ не существует.")
                 return redirect("cargopart")
+
         user.full_name = full_name
         user.phone_number = phone_number
         user.pickup_point = pvz
         user.warehouse_address = warehouse_address
+
         if password:
             if password == confirm_password:
                 if len(password) < 6:
@@ -124,17 +128,31 @@ def cargopart(request):
                 messages.error(request, "❌ Пароли не совпадают!")
                 logger.warning("Ошибка: пароли не совпадают!")
                 return redirect("cargopart")
+
         user.save()
         messages.success(request, "✅ Данные успешно обновлены!")
         return redirect("cargopart")
+
+    # Получаем объект настроек (если он есть)
+    settings = Settings.objects.first()
+
+    # Формируем user_data
     user_data = {
         "full_name": user.full_name,
         "phone_number": user.phone_number,
         "pickup_point": user.pickup_point.id if user.pickup_point else None,
         "warehouse_address": user.warehouse_address or "",
         "pvz_list": Pvz.objects.all(),
+        "id_user": user.id_user,
     }
-    return render(request, "Cargopart.html", locals())
+
+    # Передаем `user_data`, `user` и `settings` в шаблон
+    return render(request, "Cargopart.html", {
+        "user_data": user_data,
+        "user": user,
+        "settings": settings,
+    })
+
 
 
 def warehouse(request):
