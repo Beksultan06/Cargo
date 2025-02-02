@@ -156,16 +156,16 @@ def cargopart(request):
 
 
 def warehouse(request):
-    query = request.GET.get('q')
+    query = request.GET.get('q') 
     products = Product.objects.all()
 
     if query:
-        products = products.filter(track__icontains=query)
+        products = products.filter(track__icontains=query)  
 
-    page_obj = paginate_queryset(products, request, per_page=15)
+    page_obj = paginate_queryset(products, request, per_page=1)  # Показываем 10 товаров на странице
 
     return render(request, "warehouse.html", {
-        "products": page_obj,
+        "products": page_obj,  
         "query": query
     })
 
