@@ -533,57 +533,107 @@
 
     </div>
 
-
     <div class="tabs">
-        <button id="tab-account" class="active" onclick="switchTab('account')">Посылки на складе Ош</button>
-        <button id="tab-password" onclick="switchTab('password')">Полученные посылки</button>
+        <button onclick="switchTab('osh')" class="active">Посылки на складе Ош</button>
+        <button onclick="fetchMyParcels()">Мои посылки</button>
     </div>
-
-
-    <div class="search">
-        <label for="trackingNumber">Поиск по трекномеру</label>
-        <input type="text" id="trackingNumber" placeholder="Поиск" oninput="toggleResetButton()">
+    
+    <!-- Вкладка "Посылки на складе Ош" -->
+    <div id="osh" class="tab-content">
+        <form method="GET" action="{% url 'track_search_action' 'search' %}">
+            <div class="search">
+                <label for="trackingNumber">Поиск по трек-номеру</label>
+                <input type="text" name="track" id="trackingNumber" placeholder="Введите трек-номер">
+            </div>
+    
+            <div class="tracking">
+                <button type="submit" class="btn">ПОИСК</button>
+                <button type="reset" class="reset-btn">СБРОСИТЬ</button>
+            </div>
+        </form>
+    
+        {% if searched_product %}
+            <div class="card">
+                <div class="card-row">
+                    <span class="label">Трек-номер:</span>
+                    <span class="value">{{ searched_product.track }}</span>
+                </div>
+                <div class="line"></div>
+                <div class="card-row">
+                    <span class="label">Статус:</span>
+                    <span class="value">{{ searched_product.get_status_display }}</span>
+                </div>
+                <div class="line"></div>
+                <div class="card-row">
+                    <span class="label">Вес:</span>
+                    <span class="value">{{ searched_product.weight }} кг</span>
+                </div>
+                <div class="line"></div>
+                <div class="card-row">
+                    <span class="label">Цена:</span>
+                    <span class="value">{{ searched_product.price }} $</span>
+                </div>
+                <div class="line"></div>
+                <style>
+                    .btn-add {
+                        width: auto; /* Автоматическая ширина по содержимому */
+                        padding: 8px 16px; /* Меньший отступ */
+                        border: 2px solid #F39800; /* Оранжевая рамка */
+                        background: transparent; /* Прозрачный фон */
+                        color: #F39800; /* Оранжевый текст */
+                        font-size: 14px; /* Меньший шрифт */
+                        font-weight: bold;
+                        text-align: center;
+                        border-radius: 8px; /* Менее округленные углы */
+                        cursor: pointer;
+                        transition: all 0.3s ease-in-out;
+                        display: inline-block;
+                    }
+                    
+                    .btn-add:hover {
+                        background: #F39800; /* Оранжевая заливка при наведении */
+                        color: black; /* Черный текст */
+                    }
+                    
+                </style>
+                <form method="POST" action="{% url 'track_search_track' 'add' searched_product.track %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-add">ДОБАВИТЬ ПОСЫЛКУ ДЛЯ ОТСЛЕЖИВАНИЯ</button>
+                </form>
+            </div>
+        {% endif %}
+        {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <p class="error-message">{{ message }}</p>
+        {% endfor %}
     </div>
-
-    <div class="tracking">
-        <button class="btn">ПОИСК </button>
-        <button id="resetButton" class="reset-btn" onclick="resetSearch()">СБРОСИТЬ</button>
-
-        <button onclick="showPage('Past.html')">ДОБАВИТЬ ПОСЫЛКУ ДЛЯ ОТСЛЕЖИВАНИЯ</button>
+{% endif %}
     </div>
-
-    <div class="card">
-        <div class="card-row">
-            <span class="label">Кол. посылок(не выданных):</span>
-            <span class="value">0</span>
+    
+    <!-- Вкладка "Мои посылки" (заполняется через AJAX) -->
+    <div id="my-parcels" class="tab-content" style="display: none;">
+        <h3>Мои посылки</h3>
+        <div id="parcels-container">
+            <p>Загрузка...</p>
         </div>
-        <div class="line"></div>
-        <div class="card-row">
-            <span class="label">Кол. посылок(не выданных):</span>
-            <span class="value">0 кг</span>
-        </div>
-        <div class="line"></div>
-        <div class="card-row">
-            <span class="label">к оплате:</span>
-            <span class="value">0 сом</span>
-        </div>
-
-        <div class="line"></div>
     </div>
+    
+    
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
             <img class="menu-logo" src="{% static './assets/images/CargosLogo.png' %}" alt="">
             <button class="close-button" onclick="toggleMenu()">×</button>
         </div>
         <ul>
-            <li onclick="showPage('./Cargopart.html')"><svg class="icon" width="25" height="28" viewBox="0 0 25 28"
+            <li onclick="showPage({% url 'cargopart' %})"><svg class="icon" width="25" height="28" viewBox="0 0 25 28"
                     fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M2.21429 25.447H8.54343V16.7436C8.54343 16.3516 8.67657 16.023 8.94286 15.7578C9.208 15.4916 9.53657 15.3584 9.92857 15.3584H15.0714C15.4634 15.3584 15.7926 15.4916 16.0589 15.7578C16.324 16.023 16.4566 16.3516 16.4566 16.7436V25.447H22.7857V10.5464C22.7857 10.3704 22.7474 10.2104 22.6709 10.0664C22.5943 9.92242 22.4897 9.7967 22.3571 9.68927L13.1274 2.7327C12.9514 2.57956 12.7423 2.50299 12.5 2.50299C12.2577 2.50299 12.0491 2.57956 11.8743 2.7327L2.64286 9.68927C2.51143 9.79899 2.40686 9.9247 2.32914 10.0664C2.25143 10.2081 2.21314 10.3681 2.21429 10.5464V25.447ZM0.5 25.447V10.5464C0.5 10.1076 0.598286 9.69213 0.794857 9.30013C0.991428 8.90813 1.26229 8.58527 1.60743 8.33156L10.8389 1.3407C11.3223 0.971559 11.8743 0.786987 12.4949 0.786987C13.1154 0.786987 13.6709 0.971559 14.1611 1.3407L23.3926 8.32985C23.7389 8.58356 24.0097 8.90699 24.2051 9.30013C24.4017 9.69213 24.5 10.1076 24.5 10.5464V25.447C24.5 25.9064 24.3291 26.307 23.9874 26.6487C23.6457 26.9904 23.2451 27.1613 22.7857 27.1613H16.1274C15.7343 27.1613 15.4051 27.0287 15.14 26.7636C14.8749 26.4973 14.7423 26.1681 14.7423 25.7761V17.0744H10.2577V25.7761C10.2577 26.1693 10.1251 26.4984 9.86 26.7636C9.59486 27.0287 9.26629 27.1613 8.87429 27.1613H2.21429C1.75486 27.1613 1.35429 26.9904 1.01257 26.6487C0.670857 26.307 0.5 25.9064 0.5 25.447Z"
                         fill="white" />
                 </svg>
                 Главная</li>
-            <li onclick="showPage('./warehouse.html')"><svg class="icon" width="27" height="27" viewBox="0 0 27 27"
+            <li onclick="showPage({% url 'warehouse' %}')"><svg class="icon" width="27" height="27" viewBox="0 0 27 27"
                     fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M8.1 5.96124H18.9C18.9 5.96124 20.9178 7.76784 22.5 8.36124C23.6184 8.78124 25.5 8.96124 25.5 8.96124C25.5 8.96124 24.4104 9.35064 23.7 9.56124C22.7736 9.83604 21.3 10.1612 21.3 10.1612H5.7C5.7 10.1612 4.2264 9.83604 3.3 9.56124C2.5896 9.35064 1.5 8.96124 1.5 8.96124C1.5 8.96124 3.3816 8.78124 4.5 8.36124C6.0822 7.76784 8.1 5.96124 8.1 5.96124Z"
@@ -596,7 +646,7 @@
                         stroke-linejoin="round" />
                 </svg>
                 Склад Китай</li>
-            <li onclick="showPage('./mainpasels.html')"><svg class="icon" width="25" height="31" viewBox="0 0 25 31"
+            <li onclick="showPage({% url 'mainpasels' %})"><svg class="icon" width="25" height="31" viewBox="0 0 25 31"
                     fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M11.9855 22.1038L1.5 28.3951V1.16125H23.5V28.3951L13.0145 22.1038L12.5 21.7951L11.9855 22.1038Z"
@@ -644,98 +694,142 @@
     </div>
 
     <script>
-        function switchTab(tabId) {
-            const tabs = document.querySelectorAll('.tabs button');
-            const contents = document.querySelectorAll('.content');
-            const resetButton = document.getElementById('resetButton');  // Кнопка сброса
-
-            // Убираем активные классы и скрываем содержимое всех вкладок
-            tabs.forEach(tab => tab.classList.remove('active'));
-            contents.forEach(content => content.style.display = 'none');
-
-            // Добавляем активный класс выбранной вкладке и показываем её содержимое
-            document.querySelector(`.tabs button[onclick="switchTab('${tabId}')"]`).classList.add('active');
-            document.getElementById(tabId).style.display = 'block';
-
-            // Логика для скрытия кнопки "СБРОСИТЬ"
-            if (tabId === 'password') {  // Если выбрана вкладка "Полученные посылки"
-                resetButton.style.display = 'none';  // Скрываем кнопку сброса
-            } else {  // В любом другом случае показываем кнопку
-                resetButton.style.display = 'block';  // Показываем кнопку сброса
+        document.addEventListener("DOMContentLoaded", function () {
+            // Функция для переключения вкладок
+            function switchTab(tabId) {
+                const tabs = document.querySelectorAll(".tab-content");
+                const buttons = document.querySelectorAll(".tabs button");
+    
+                tabs.forEach(tab => tab.style.display = "none");
+                buttons.forEach(btn => btn.classList.remove("active"));
+    
+                const activeTab = document.getElementById(tabId);
+                const activeButton = document.querySelector(`.tabs button[onclick="switchTab('${tabId}')"]`);
+    
+                if (activeTab) activeTab.style.display = "block";
+                if (activeButton) activeButton.classList.add("active");
             }
-        }
-
-
-        // Функция для отображения меню
-        function toggleMenu() {
-            const sideMenu = document.getElementById('sideMenu');
-            sideMenu.classList.toggle('active');
-        }
-
-        // Функция для проверки, нужно ли показывать кнопку сброса
-        function toggleResetButton() {
-            const input = document.getElementById('trackingNumber');
-            const resetButton = document.getElementById('resetButton');
-
-            if (input.value.trim() !== "") {
-                resetButton.style.display = 'block';
-            } else {
-                resetButton.style.display = 'none';
+    
+            // Функция для загрузки "Мои посылки"
+            function fetchMyParcels() {
+                switchTab("my-parcels");  // Переключаем вкладку
+    
+                fetch("{% url 'track_search_action' 'my-parcels' %}", {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById("parcels-container");
+                    if (!container) return;
+    
+                    container.innerHTML = "";
+    
+                    if (data.user_products.length === 0) {
+                        container.innerHTML = "<p>У вас пока нет добавленных посылок.</p>";
+                        return;
+                    }
+    
+                    data.user_products.forEach(product => {
+                        let card = document.createElement("div");
+                        card.classList.add("card");
+                        card.innerHTML = `
+                            <div class="card-row"><span class="label">Трек-номер:</span><span class="value">${product.track}</span></div>
+                            <div class="line"></div>
+                            <div class="card-row"><span class="label">Статус:</span><span class="value">${product.status}</span></div>
+                            <div class="line"></div>
+                            <div class="card-row"><span class="label">Вес:</span><span class="value">${product.weight} кг</span></div>
+                            <div class="line"></div>
+                            <div class="card-row"><span class="label">Цена:</span><span class="value">${product.price} $</span></div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => console.error("Ошибка загрузки посылок:", error));
             }
-        }
-
-        // Функция для сброса поиска
-        function resetSearch() {
-            const input = document.getElementById('trackingNumber');
-            input.value = "";
-            toggleResetButton();
-        }
-        // Закрытие меню при клике вне его
-        document.addEventListener('click', function (event) {
-            const sidebar = document.getElementById('sideMenu');
-            const menuButton = document.querySelector('.menu-icon');
-
-            if (sidebar && menuButton) {
-                if (!sidebar.contains(event.target) && !menuButton.contains(event.target)) {
-                    sidebar.classList.remove('active');
+    
+            // Функция для отображения меню
+            function toggleMenu() {
+                const sideMenu = document.getElementById("sideMenu");
+                if (sideMenu) sideMenu.classList.toggle("active");
+            }
+    
+            // Функция для проверки, нужно ли показывать кнопку сброса
+            function toggleResetButton() {
+                const input = document.getElementById("trackingNumber");
+                const resetButton = document.getElementById("resetButton");
+    
+                if (input && resetButton) {
+                    resetButton.style.display = input.value.trim() !== "" ? "block" : "none";
                 }
             }
+    
+            // Функция для сброса поиска
+            function resetSearch() {
+                const input = document.getElementById("trackingNumber");
+                if (input) input.value = "";
+                toggleResetButton();
+            }
+    
+            // Закрытие меню при клике вне его
+            document.addEventListener("click", function (event) {
+                const sidebar = document.getElementById("sideMenu");
+                const menuButton = document.querySelector(".menu-icon");
+    
+                if (sidebar && menuButton) {
+                    if (!sidebar.contains(event.target) && !menuButton.contains(event.target)) {
+                        sidebar.classList.remove("active");
+                    }
+                }
+            });
+    
+            // Функция для перехода на другую страницу
+            function showPage(url) {
+                window.location.href = url;
+            }
+    
+            // Функция для выхода
+            function logout() {
+                window.location.href = "enter.html";
+            }
+    
+            // Обработка переключения темы
+            const themeToggle = document.getElementById("themeToggle");
+            if (themeToggle) {
+                const savedTheme = localStorage.getItem("theme") || "light";
+                document.documentElement.className = savedTheme;
+                themeToggle.classList.toggle("dark-mode", savedTheme === "dark");
+    
+                themeToggle.addEventListener("click", () => {
+                    const currentTheme = document.documentElement.className;
+                    const newTheme = currentTheme === "light" ? "dark" : "light";
+    
+                    document.documentElement.className = newTheme;
+                    localStorage.setItem("theme", newTheme);
+                    themeToggle.classList.toggle("dark-mode", newTheme === "dark");
+                });
+            }
+    
+            // Функция переключения темы вручную
+            function toggleTheme() {
+                const body = document.body;
+                if (body) body.classList.toggle("light");
+    
+                const toggleButton = document.querySelector(".toggle-button");
+                if (toggleButton) toggleButton.classList.toggle("dark-mode");
+            }
+    
+            // Назначаем функции глобально
+            window.switchTab = switchTab;
+            window.fetchMyParcels = fetchMyParcels;
+            window.toggleMenu = toggleMenu;
+            window.toggleResetButton = toggleResetButton;
+            window.resetSearch = resetSearch;
+            window.showPage = showPage;
+            window.logout = logout;
+            window.toggleTheme = toggleTheme;
         });
-        // Функция для перехода на другую страницу
-        function showPage(url) {
-            window.location.href = url;
-        }
-
-        // Функция для выхода
-        function logout() {
-            window.location.href = 'enter.html';
-        }
-        // Обработка переключения темы
-        const themeToggle = document.getElementById('themeToggle');
-        const savedTheme = localStorage.getItem('theme') || 'light';
-
-        document.documentElement.className = savedTheme;
-        themeToggle.classList.toggle('dark-mode', savedTheme === 'dark');
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.className;
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            document.documentElement.className = newTheme;
-            localStorage.setItem('theme', newTheme);
-            themeToggle.classList.toggle('dark-mode', newTheme === 'dark');
-        });
-        function toggleTheme() {
-            const body = document.body;
-            body.classList.toggle('light'); // Переключаем класс light на body
-
-            // Проверка текущего состояния и изменение стилей для переключателя
-            const toggleButton = document.querySelector('.toggle-button');
-            toggleButton.classList.toggle('dark-mode');
-        }
     </script>
-
-
+    
 </body>
 
 </html>

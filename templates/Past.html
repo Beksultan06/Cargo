@@ -170,12 +170,12 @@
                     warning.style.display = 'none';
                 }, 3000);
             } else {
-                window.location.href = 'mainpasels.html';
+                window.location.href = '{% url 'mainpasels' %}';
             }
         }
 
         function closeForm() {
-            window.location.href = 'mainpasels.html';
+            window.location.href = '{% url 'mainpasels' %}';
         }
     </script>
 </body>
