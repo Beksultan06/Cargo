@@ -14,6 +14,7 @@ async def start(message: types.Message):
     username = message.from_user.username
     full_name = message.from_user.full_name or "Неизвестно"
     logging.info(f"Получен chat_id: {chat_id} от пользователя {username}")
+
     try:
         user = await get_user_by_chat_id(chat_id)
         if user:
@@ -22,16 +23,18 @@ async def start(message: types.Message):
                 f"✅ Привет, {user.full_name}!\nДобро пожаловать!",
                 reply_markup=get_main_menu()
             )
-        else:
-            registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
-            logging.info(f"Отправляем ссылку регистрации: {registration_link}")
-            await message.answer(
-                "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
-                reply_markup=get_inline_keyboard(registration=True, chat_id=chat_id)
-            )
+            return  # 🔥 Если пользователь есть, сразу же выходим из функции
+
+        registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
+        logging.info(f"Отправляем ссылку регистрации: {registration_link}")
+        await message.answer(
+            "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
+            reply_markup=get_inline_keyboard(registration=True, chat_id=chat_id)
+        )
     except Exception as e:
         logging.error(f"Ошибка при обработке пользователя: {e}")
         await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
+
 
 @router.message(lambda message: message.text == "🚫 Запрещенные товары")
 async def forbidden_goods(message: types.Message):

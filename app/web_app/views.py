@@ -21,11 +21,13 @@ logger = logging.getLogger(__name__)
 def register(request):
     chat_id = request.GET.get('chat_id') or request.POST.get('chat_id')
     logging.info(f"Полученный chat_id в register: {chat_id}")
+
     if chat_id:
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
             login(request, user)
-            return redirect('cargopart')
+            return redirect('cargopart')  # 🔥 Если chat_id уже есть, сразу редиректим
+
     if request.method == 'POST':
         full_name = request.POST.get('fullName', '').strip()
         phone = request.POST.get('phone', '').strip()
@@ -33,20 +35,25 @@ def register(request):
         address = request.POST.get('address', '').strip()
         password = request.POST.get('password', '').strip()
         confirm_password = request.POST.get('confirmPassword', '').strip()
+
         if not full_name or not phone or not pvz_id or not address or not password or not confirm_password:
             messages.error(request, '❌ Все поля обязательны для заполнения.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
+
         if password != confirm_password:
             messages.error(request, '❌ Пароли не совпадают.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
+
         try:
             pvz = Pvz.objects.get(id=pvz_id)
         except Pvz.DoesNotExist:
             messages.error(request, '❌ Выбранный ПВЗ не существует.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
+
         if User.objects.filter(phone_number=phone).exists():
             messages.error(request, '❌ Пользователь с таким номером телефона уже зарегистрирован.')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
+
         try:
             new_user = User.objects.create(
                 full_name=full_name,
@@ -58,17 +65,20 @@ def register(request):
                 chat_id=chat_id
             )
             logging.info(f"Создан новый пользователь {new_user.username} с chat_id: {new_user.chat_id}")
+
             user = authenticate(request, username=phone, password=password)
             if user:
                 login(request, user)
                 messages.success(request, '✅ Регистрация и авторизация прошли успешно!')
-                return redirect('cargopart')
+                return redirect('cargopart')  # 🔥 После регистрации сразу редиректим
+
         except Exception as e:
             logging.error(f"Ошибка при регистрации: {e}")
             messages.error(request, f'❌ Ошибка при регистрации: {e}')
             return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
 
     return render(request, 'index.html', {'pvz_list': Pvz.objects.all()})
+
 
 def login_view(request):
     if request.method == "POST":
