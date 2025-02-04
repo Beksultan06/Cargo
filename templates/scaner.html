@@ -183,17 +183,20 @@
         let currentTrack = null;
         async function submitWeight() {
                 let weightInput = document.getElementById("weight-input");
-                let weight = weightInput.value.trim();
+                let weightValue = weightInput.value.trim();
 
                 if (!currentTrack) {
                     alert("Ошибка: трек-номер не найден!");
                     return;
                 }
 
-                if (!weight || isNaN(weight) || weight <= 0) {
+                if (!weightValue || isNaN(weightValue) || weightValue <= 0) {
                     alert("Введите корректный вес!");
                     return;
                 }
+
+                // Преобразуем в int, если число целое, иначе в float
+                let weight = weightValue.includes(".") ? parseFloat(weightValue) : parseInt(weightValue);
 
                 console.log(`Отправляем вес ${weight} кг для трек-номера ${currentTrack}`);
 
@@ -208,7 +211,7 @@
                     console.log("Ответ сервера:", data);
 
                     if (data.success) {
-                        barcodeResult.innerHTML = `✅ Вес ${weight} кг для <b>${currentTrack}</b> сохранён!`;
+                        barcodeResult.innerHTML = `✅ Вес ${data.weight} кг для <b>${currentTrack}</b> сохранён!`;
                         barcodeResult.className = "result-container success";
 
                         // Скрываем форму ввода веса
@@ -226,8 +229,6 @@
                     barcodeResult.className = "result-container error";
                 }
             }
-
-
         async function startScan() {
             if (scannerActive) return;
             scannerActive = true;

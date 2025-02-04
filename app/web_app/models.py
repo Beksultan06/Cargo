@@ -159,8 +159,14 @@ class Product(models.Model):
         settings = Settings.objects.first()
         price_per_kg = settings.price if settings else 0  # Если Settings пуст, ставим 3$ по умолчанию
 
-        # Автоматический расчет цены (вес * цена за кг)
-        self.price = round(self.weight * price_per_kg, 2) if self.weight else 0
+        if self.weight:
+            if self.weight <= 0.56:
+                self.price = 50  # Фиксированная цена за малый вес
+            else:
+                self.price = round(self.weight * price_per_kg, 2)  # Обычный расчет
+
+        else:
+            self.price = 0  # Если веса нет, цена = 0
 
         if not self.pk:
             # Проверяем, был ли товар добавлен менеджером

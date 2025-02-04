@@ -210,20 +210,24 @@ def save_track(request):
             )
 
             if created:
-                # Если товар только что создан - НЕ запрашиваем вес
                 return JsonResponse({"success": True, "message": f"✅ Товар {track} добавлен в систему!"})
 
             # Если товар уже есть, но веса нет - запрашиваем ввод веса
             if product.weight is None and weight is None:
                 return JsonResponse({"success": True, "message": f"Введите вес для товара {track}", "need_weight": True})
 
-            # Если получен вес, обновляем товар
+            # Если получен вес, проверяем и обновляем товар
             if weight:
                 try:
-                    product.weight = float(weight)
+                    weight = float(weight) if "." in weight else int(weight)  # Преобразуем в float или int
+                    product.weight = weight
                     product.status = status or ProductStatus.IN_TRANSIT
                     product.save()
-                    return JsonResponse({"success": True, "message": f"✅ Вес {weight} кг для {track} сохранен!"})
+                    return JsonResponse({
+                        "success": True,
+                        "message": f"✅ Вес {weight} кг для {track} сохранен!",
+                        "weight": weight
+                    })
                 except ValueError:
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
 
