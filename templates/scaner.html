@@ -164,12 +164,30 @@
 
     <div id="barcode-result" class="result-container"></div>
 
-    <!-- Форма для ввода веса -->
-    <div id="weight-form">
+    
+    <div id="edit-form"
+        style="display: none; background: #222; padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;">
+        <p id="edit-track" style="color: #F39800; font-weight: bold;"></p>
         <label for="weight-input">Введите вес (кг):</label>
-        <input type="number" id="weight-input" step="0.1" placeholder="Вес в кг">
-        <button id="confirm-weight">✅ Подтвердить</button>
+        <input type="number" id="weight-input" step="0.1" placeholder="Вес в кг"
+            style="width: 100%; padding: 8px; text-align: center; margin-bottom: 10px;">
+    
+        <label for="status-select">Статус:</label>
+        <select id="status-select" style="width: 100%; padding: 8px; text-align: center;">
+            <option value="waiting">Ожидает поступления</option>
+            <option value="in_transit">В пути</option>
+            <option value="in_office">В офисе</option>
+            <option value="courier_in_transit">Курьер в пути</option>
+            <option value="delivered">Доставлен</option>
+        </select>
+    
+        <button onclick="submitEditForm()"
+            style="background-color: #F39800; border: none; border-radius: 5px; color: #000; padding: 10px 15px; font-size: 16px; cursor: pointer; font-weight: bold; text-transform: uppercase; margin-top: 10px; width: 100%;">✅
+            Сохранить</button>
     </div>
+
+
+
 
     <script>
         let video = document.getElementById('video');
@@ -288,14 +306,13 @@
                     console.log("Ответ сервера:", data);
 
                     if (data.success) {
-                        if (data.need_weight) {
-                            barcodeResult.innerHTML = `⚠️ Введите вес для <b>${track}</b>`;
-                            barcodeResult.className = "result-container loading";
-                            weightForm.style.display = "block";
-                            currentTrack = track;  // Запоминаем трек-номер
-                        } else {
+                        if (data.first_scan) {
                             barcodeResult.innerHTML = `✅ ${data.message}`;
                             barcodeResult.className = "result-container success";
+                        } else {
+                            barcodeResult.innerHTML = `✍️ Товар <b>${track}</b> найден. Можно редактировать.`;
+                            barcodeResult.className = "result-container loading";
+                            showEditForm(track, data.weight, data.status);
                         }
                     } else {
                         barcodeResult.innerHTML = `❌ ${data.error}`;
@@ -306,6 +323,64 @@
                     barcodeResult.className = "result-container error";
                 }
             }
+
+            // Функция отображения формы редактирования
+            function showEditForm(track, weight, status) {
+                let weightInput = document.getElementById("weight-input");
+                let statusSelect = document.getElementById("status-select");
+
+                document.getElementById("edit-track").innerText = `Трек: ${track}`;
+                weightInput.value = weight || "";
+                statusSelect.value = status || "in_transit";
+
+                document.getElementById("edit-form").style.display = "block";
+                currentTrack = track;
+            }
+
+            // Отправка обновленных данных
+            async function submitEditForm() {
+                let weightInput = document.getElementById("weight-input").value.trim();
+                let statusSelect = document.getElementById("status-select").value;
+
+                if (!currentTrack) {
+                    alert("Ошибка: трек-номер не найден!");
+                    return;
+                }
+
+                if (!weightInput || isNaN(weightInput) || weightInput <= 0) {
+                    alert("Введите корректный вес!");
+                    return;
+                }
+
+                let weight = weightInput.includes(".") ? parseFloat(weightInput) : parseInt(weightInput);
+
+                try {
+                    let response = await fetch("/save_track/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `track=${currentTrack}&weight=${weight}&status=${statusSelect}`
+                    });
+
+                    let data = await response.json();
+                    console.log("Ответ сервера:", data);
+
+                    if (data.success) {
+                        barcodeResult.innerHTML = `✅ ${data.message}`;
+                        barcodeResult.className = "result-container success";
+                        document.getElementById("edit-form").style.display = "none";
+                    } else {
+                        barcodeResult.innerHTML = `❌ ${data.error}`;
+                        barcodeResult.className = "result-container error";
+                    }
+                } catch (error) {
+                    console.error("Ошибка отправки запроса:", error);
+                    barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
+                    barcodeResult.className = "result-container error";
+                }
+            }
+
+
+
         confirmWeightButton.addEventListener("click", submitWeight);
     </script>
 </body>

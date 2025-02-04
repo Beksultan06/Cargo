@@ -189,6 +189,9 @@ def manager(request):
     statuses = ProductStatus.choices
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
 
+
+
+
 @csrf_exempt
 def save_track(request):
     if request.method == "POST":
@@ -202,40 +205,49 @@ def save_track(request):
 
             product, created = Product.objects.get_or_create(
                 track=track,
-                defaults={
-                    "weight": None,
-                    "status": ProductStatus.WAITING_FOR_ARRIVAL,
-                    "created_by_manager": True
-                }
+                defaults={"status": ProductStatus.IN_TRANSIT}
             )
 
+            # Если товар только что добавлен, то он пока без редактирования
             if created:
-                return JsonResponse({"success": True, "message": f"✅ Товар {track} добавлен в систему!"})
-            if product.weight is None and weight is None:
-                return JsonResponse({"success": True, "message": f"Введите вес для товара {track}", "need_weight": True})
+                return JsonResponse({
+                    "success": True,
+                    "message": f"✅ Товар {track} добавлен в систему!",
+                    "first_scan": True
+                })
+
+            # Если вес и статус переданы во втором сканировании - обновляем
+            updated = False
             if weight:
                 try:
                     weight = float(weight) if "." in weight else int(weight)
                     product.weight = weight
-                    product.status = status or ProductStatus.IN_TRANSIT
-                    product.save()
-                    return JsonResponse({
-                        "success": True,
-                        "message": f"✅ Вес {weight} кг для {track} сохранен!",
-                        "weight": weight
-                    })
+                    updated = True
                 except ValueError:
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
+
             if status:
                 product.status = status
+                updated = True
+
+            if updated:
                 product.save()
 
-            return JsonResponse({"success": True, "message": f"✅ Статус товара {track} обновлен!"})
+            return JsonResponse({
+                "success": True,
+                "message": f"✅ Обновлены данные для {track}",
+                "first_scan": False,
+                "track": product.track,
+                "weight": product.weight,
+                "status": product.status
+            })
 
         except Exception as e:
             return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+
+
 
 
 
