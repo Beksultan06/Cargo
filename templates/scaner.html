@@ -7,7 +7,7 @@
     <title>Сканер</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- CSRF для Django -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
     <style>
         * {
@@ -94,6 +94,61 @@
             background-color: #ffa500;
             color: #000;
         }
+
+        /* Стили формы ввода веса */
+        #weight-form {
+            display: none;
+            background-color: #222;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            max-width: 300px;
+        }
+
+        #weight-form label {
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            color: #F39800;
+        }
+
+        #weight-input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid #F39800;
+            border-radius: 5px;
+            background: #000;
+            color: #fff;
+            text-align: center;
+        }
+
+        #weight-input:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+
+        #confirm-weight {
+            background-color: #F39800;
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 10px;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        #confirm-weight:hover {
+            background-color: #FFD700;
+        }
     </style>
 </head>
 
@@ -109,14 +164,69 @@
 
     <div id="barcode-result" class="result-container"></div>
 
+    <!-- Форма для ввода веса -->
+    <div id="weight-form">
+        <label for="weight-input">Введите вес (кг):</label>
+        <input type="number" id="weight-input" step="0.1" placeholder="Вес в кг">
+        <button id="confirm-weight">✅ Подтвердить</button>
+    </div>
+
     <script>
         let video = document.getElementById('video');
         let scannerContainer = document.querySelector('.scanner-container');
         let barcodeResult = document.getElementById('barcode-result');
         let scanButton = document.querySelector('.scan-button');
         let stopButton = document.querySelector('.stop-button');
+        let weightForm = document.getElementById("weight-form");
+        let confirmWeightButton = document.getElementById("confirm-weight");
         let scannerActive = false;
-        let codeReader;
+        let currentTrack = null;
+        async function submitWeight() {
+                let weightInput = document.getElementById("weight-input");
+                let weight = weightInput.value.trim();
+
+                if (!currentTrack) {
+                    alert("Ошибка: трек-номер не найден!");
+                    return;
+                }
+
+                if (!weight || isNaN(weight) || weight <= 0) {
+                    alert("Введите корректный вес!");
+                    return;
+                }
+
+                console.log(`Отправляем вес ${weight} кг для трек-номера ${currentTrack}`);
+
+                try {
+                    let response = await fetch("/save_track/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `track=${currentTrack}&weight=${weight}&status=in_transit`
+                    });
+
+                    let data = await response.json();
+                    console.log("Ответ сервера:", data);
+
+                    if (data.success) {
+                        barcodeResult.innerHTML = `✅ Вес ${weight} кг для <b>${currentTrack}</b> сохранён!`;
+                        barcodeResult.className = "result-container success";
+
+                        // Скрываем форму ввода веса
+                        weightForm.style.display = "none";
+                        weightInput.value = ""; // Очищаем поле ввода
+                        currentTrack = null; // Сбрасываем текущий трек
+
+                    } else {
+                        barcodeResult.innerHTML = `❌ ${data.error}`;
+                        barcodeResult.className = "result-container error";
+                    }
+                } catch (error) {
+                    console.error("Ошибка отправки запроса:", error);
+                    barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
+                    barcodeResult.className = "result-container error";
+                }
+            }
+
 
         async function startScan() {
             if (scannerActive) return;
@@ -133,13 +243,13 @@
                 video.srcObject = stream;
                 video.play();
 
-                codeReader = new ZXing.BrowserBarcodeReader();
+                let codeReader = new ZXing.BrowserBarcodeReader();
                 codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
                     if (result) {
-                        let track = result.text;
-                        barcodeResult.innerHTML = `✅ Трек-номер <b>${track}</b> найден!`;
+                        currentTrack = result.text;
+                        barcodeResult.innerHTML = `✅ Трек-номер <b>${currentTrack}</b> найден!`;
                         barcodeResult.className = "result-container success";
-                        sendTrackToManager(track);
+                        checkTrackInDatabase(currentTrack);
                         stopScan();
                     }
                 });
@@ -157,16 +267,47 @@
                 let tracks = stream.getTracks();
                 tracks.forEach(track => track.stop());
             }
-
             scannerActive = false;
             scannerContainer.style.display = 'none';
             scanButton.style.display = 'inline-block';
             stopButton.style.display = 'none';
         }
 
-        async function sendTrackToManager(track) {
-            window.location.href = `/manager/?track=${track}`;
-        }
+        async function checkTrackInDatabase(track) {
+                console.log(`Проверяем трек-номер в базе: ${track}`);
+
+                try {
+                    let response = await fetch("/save_track/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `track=${track}`
+                    });
+
+                    let data = await response.json();
+                    console.log("Ответ сервера:", data);
+
+                    if (data.success) {
+                        if (data.need_weight) {
+                            barcodeResult.innerHTML = `⚠️ Введите вес для <b>${track}</b>`;
+                            barcodeResult.className = "result-container loading";
+                            weightForm.style.display = "block";
+                            currentTrack = track;  // Запоминаем трек-номер
+                        } else {
+                            barcodeResult.innerHTML = `✅ ${data.message}`;
+                            barcodeResult.className = "result-container success";
+                        }
+                    } else {
+                        barcodeResult.innerHTML = `❌ ${data.error}`;
+                        barcodeResult.className = "result-container error";
+                    }
+                } catch (error) {
+                    barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
+                    barcodeResult.className = "result-container error";
+                }
+            }
+
+
+        confirmWeightButton.addEventListener("click", submitWeight);
     </script>
 </body>
 

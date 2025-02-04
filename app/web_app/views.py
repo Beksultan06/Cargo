@@ -158,8 +158,6 @@ def cargopart(request):
         "pvz_list": Pvz.objects.all(),
         "id_user": user.id_user,
     }
-
-    # Передаем `user_data`, `user` и `settings` в шаблон
     return render(request, "Cargopart.html", {
         "user_data": user_data,
         "user": user,
@@ -192,27 +190,58 @@ def manager(request):
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
 
 @csrf_exempt
-# @login_required
 def save_track(request):
     if request.method == "POST":
         try:
             track = request.POST.get("track")
-            status = request.POST.get("status")
             weight = request.POST.get("weight")
-            if not track or not status or not weight:
-                return JsonResponse({"success": False, "error": "Заполните все поля"}, status=400)
-            weight = float(weight)
-            product, created = Product.objects.get_or_create(track=track, defaults={"weight": weight, "status": status, "created_by_manager": True})
-            if not created:
-                product.weight = weight
+            status = request.POST.get("status")
+
+            if not track:
+                return JsonResponse({"success": False, "error": "Трек-номер обязателен"}, status=400)
+
+            product, created = Product.objects.get_or_create(
+                track=track,
+                defaults={
+                    "weight": None,  # Первое сканирование - вес НЕ запрашиваем
+                    "status": ProductStatus.WAITING_FOR_ARRIVAL,
+                    "created_by_manager": True
+                }
+            )
+
+            if created:
+                # Если товар только что создан - НЕ запрашиваем вес
+                return JsonResponse({"success": True, "message": f"✅ Товар {track} добавлен в систему!"})
+
+            # Если товар уже есть, но веса нет - запрашиваем ввод веса
+            if product.weight is None and weight is None:
+                return JsonResponse({"success": True, "message": f"Введите вес для товара {track}", "need_weight": True})
+
+            # Если получен вес, обновляем товар
+            if weight:
+                try:
+                    product.weight = float(weight)
+                    product.status = status or ProductStatus.IN_TRANSIT
+                    product.save()
+                    return JsonResponse({"success": True, "message": f"✅ Вес {weight} кг для {track} сохранен!"})
+                except ValueError:
+                    return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
+
+            # Если вес уже есть, просто обновляем статус
+            if status:
                 product.status = status
-                product.created_by_manager = True
                 product.save()
-                return redirect("/scanner/")
-            return JsonResponse({"success": True, "message": f"Товар {track} сохранён!"})
-        except ValueError:
-            return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
+
+            return JsonResponse({"success": True, "message": f"✅ Статус товара {track} обновлен!"})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
+
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+
+
+
+
 
 
 @login_required

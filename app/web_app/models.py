@@ -143,7 +143,7 @@ class ProductStatus(models.TextChoices):
 class Product(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, verbose_name='Пользователь', null=True, blank=True)
     track = models.CharField(max_length=70, verbose_name="Трек номер")
-    weight = models.FloatField(verbose_name="КГ", help_text="Килограм товара")
+    weight = models.FloatField(verbose_name="КГ", help_text="Килограм товара", blank=True, null=True)
     price = models.FloatField(verbose_name="Цена ($)", help_text="Автоматически рассчитывается", editable=False)
     status = models.CharField(
         max_length=20,
