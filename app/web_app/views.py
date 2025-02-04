@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
-from .models import ProductStatus, Settings, User, Pvz, Product
+from .models import ProductStatus, Settings, User, Pvz, Product, generate_code_from_pvz
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -124,6 +124,7 @@ def cargopart(request):
         user.phone_number = phone_number
         user.pickup_point = pvz
         user.warehouse_address = warehouse_address
+        user.id_user = generate_code_from_pvz(user)
 
         if password:
             if password == confirm_password:
@@ -146,10 +147,8 @@ def cargopart(request):
         messages.success(request, "✅ Данные успешно обновлены!")
         return redirect("cargopart")
 
-    # Получаем объект настроек (если он есть)
     settings = Settings.objects.first()
 
-    # Формируем user_data
     user_data = {
         "full_name": user.full_name,
         "phone_number": user.phone_number,
@@ -166,6 +165,7 @@ def cargopart(request):
 
 
 
+
 def warehouse(request):
     query = request.GET.get('q') 
     products = Product.objects.all()
@@ -173,7 +173,7 @@ def warehouse(request):
     if query:
         products = products.filter(track__icontains=query)  
 
-    page_obj = paginate_queryset(products, request, per_page=1)  # Показываем 10 товаров на странице
+    page_obj = paginate_queryset(products, request, per_page=1)
 
     return render(request, "warehouse.html", {
         "products": page_obj,  
@@ -203,7 +203,7 @@ def save_track(request):
             product, created = Product.objects.get_or_create(
                 track=track,
                 defaults={
-                    "weight": None,  # Первое сканирование - вес НЕ запрашиваем
+                    "weight": None,
                     "status": ProductStatus.WAITING_FOR_ARRIVAL,
                     "created_by_manager": True
                 }
@@ -211,15 +211,11 @@ def save_track(request):
 
             if created:
                 return JsonResponse({"success": True, "message": f"✅ Товар {track} добавлен в систему!"})
-
-            # Если товар уже есть, но веса нет - запрашиваем ввод веса
             if product.weight is None and weight is None:
                 return JsonResponse({"success": True, "message": f"Введите вес для товара {track}", "need_weight": True})
-
-            # Если получен вес, проверяем и обновляем товар
             if weight:
                 try:
-                    weight = float(weight) if "." in weight else int(weight)  # Преобразуем в float или int
+                    weight = float(weight) if "." in weight else int(weight)
                     product.weight = weight
                     product.status = status or ProductStatus.IN_TRANSIT
                     product.save()
@@ -230,8 +226,6 @@ def save_track(request):
                     })
                 except ValueError:
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
-
-            # Если вес уже есть, просто обновляем статус
             if status:
                 product.status = status
                 product.save()
@@ -252,20 +246,14 @@ def save_track(request):
 def mainpasels(request):
     """Главная страница с посылками пользователя"""
     user = request.user
-    status_filter = request.GET.get('status', 'in_office')  # Фильтр по статусу
+    status_filter = request.GET.get('status', 'in_office')
     search_form = TrackingSearchForm(request.GET)
-
-    # Фильтруем посылки по статусу
     if status_filter == 'delivered':
         parcels = Product.objects.filter(user=user, status="delivered").order_by('-created_at')
     else:
         parcels = Product.objects.filter(user=user, status="in_office").order_by('-created_at')
-
-    # Если введён трек-номер - ищем конкретную посылку
     if search_form.is_valid() and search_form.cleaned_data['track']:
         parcels = parcels.filter(track__icontains=search_form.cleaned_data['track'])
-
-    # Подсчитываем статистику
     total_weight = sum(parcel.weight for parcel in parcels)
     total_price = sum(parcel.price for parcel in parcels)
 
@@ -283,7 +271,6 @@ def mainpasels(request):
 class ParcelView(View):
 
     def get(self, request, action=None, track=None):
-        """Обрабатывает GET-запросы для поиска и просмотра посылок"""
         if action == "search":
             return self.track_search(request)
         elif action == "my-parcels":
@@ -291,13 +278,11 @@ class ParcelView(View):
         return redirect("mainpasels")
 
     def post(self, request, action=None, track=None):
-        """Обрабатывает POST-запрос для добавления посылки"""
         if action == "add":
             return self.add_tracking(request, track)
         return redirect("mainpasels")
 
     def track_search(self, request):
-        """Поиск товара по трек-номеру"""
         track = request.GET.get("track", "").strip()
         searched_product = None
 
@@ -313,7 +298,6 @@ class ParcelView(View):
         })
 
     def add_tracking(self, request, track):
-        """Присвоить товар пользователю"""
         user = request.user
         try:
             product = Product.objects.get(track=track)
@@ -331,7 +315,6 @@ class ParcelView(View):
         return redirect("mainpasels")
 
     def my_parcels(self, request):
-        """Вывод всех посылок пользователя (Поддержка AJAX)"""
         user_products = Product.objects.filter(user=request.user).order_by("-created_at")
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -350,7 +333,6 @@ class ParcelView(View):
             "user_products": user_products,
             "no_products": not user_products.exists(),
         })
-        
-        
+
 def past(request):
     return render(request, "Past.html", locals())

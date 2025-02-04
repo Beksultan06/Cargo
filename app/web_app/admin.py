@@ -17,8 +17,10 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Pvz)
 class PvzAdmin(admin.ModelAdmin):
-    list_display = ('city',)
-    search_fields = ('city',)
+    list_display = ('slug',)
+    search_fields = ('slug',)
+    prepopulated_fields = {'slug': ('city',)}
+
 
 @admin.register(Settings)
 class SettingsAdmin(admin.ModelAdmin):

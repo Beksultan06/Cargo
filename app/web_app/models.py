@@ -5,13 +5,14 @@ import random, string
 from threading import Timer
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from slugify import slugify
+import uuid
 
 def generate_code_from_pvz(instance):
-    """Генерирует код в формате <Первые 3 буквы ПВЗ>-<6 случайных цифр>"""
-    if instance.pickup_point and instance.pickup_point.city:
-        city_prefix = instance.pickup_point.city[:3].upper()
+    if instance.pickup_point and instance.pickup_point.slug:
+        slug_prefix = instance.pickup_point.slug[:3].upper()
         random_digits = ''.join(random.choices(string.digits, k=6))
-        return f"{city_prefix}-{random_digits}"
+        return f"{slug_prefix}-{random_digits}"
     return None
 
 def generate_code():
@@ -19,6 +20,10 @@ def generate_code():
 
 class Pvz(models.Model):
     city = models.CharField(verbose_name="ПВЗ", max_length=100, null=True, blank=True)
+    slug = models.TextField(
+        verbose_name="SLUG",
+        unique=True, null=True
+    )
     user = models.ForeignKey(
         'User',
         on_delete=models.CASCADE, 
@@ -27,6 +32,16 @@ class Pvz(models.Model):
         blank=True, 
         verbose_name="Пользователь"
     )
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.city)
+            self.slug = base_slug
+            while Pvz.objects.filter(slug=self.slug).exists():
+                unique_suffix = uuid.uuid4().hex[:6]
+                self.slug = f"{base_slug}-{unique_suffix}"
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return self.city
@@ -68,7 +83,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     def save(self, *args, **kwargs):
-        """Автоматически генерируем `code` и `id_user` перед сохранением"""
         if self.pickup_point:
             new_code = generate_code_from_pvz(self)
             if not self.code:
@@ -88,8 +102,7 @@ class User(AbstractUser):
 
 @receiver(pre_save, sender=User)
 def update_code_on_pvz_change(sender, instance, **kwargs):
-    """Обновляет code и id_user, если пользователь сменил ПВЗ"""
-    if instance.pickup_point:   
+    if instance.pickup_point:
         new_code = generate_code_from_pvz(instance)
         instance.code = new_code
         instance.id_user = new_code
@@ -155,25 +168,14 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания", null=True)
 
     def save(self, *args, **kwargs):
-        # Получаем цену за кг из Settings
         settings = Settings.objects.first()
-        price_per_kg = settings.price if settings else 0  # Если Settings пуст, ставим 3$ по умолчанию
-
-        if self.weight:
-            if self.weight <= 0.56:
-                self.price = 50  # Фиксированная цена за малый вес
-            else:
-                self.price = round(self.weight * price_per_kg, 2)  # Обычный расчет
-
-        else:
-            self.price = 0  # Если веса нет, цена = 0
+        price_per_kg = settings.price if settings else 0
+        self.price = round(self.weight * price_per_kg, 2) if self.weight else 0
 
         if not self.pk:
-            # Проверяем, был ли товар добавлен менеджером
             if self.created_by_manager:
                 self.status = ProductStatus.IN_TRANSIT
             else:
-                # Если товар добавлен пользователем
                 existing_product = Product.objects.filter(track=self.track).exists()
                 if not existing_product:
                     self.status = ProductStatus.WAITING_FOR_ARRIVAL
@@ -188,7 +190,6 @@ class Product(models.Model):
         elif self.status == ProductStatus.IN_OFFICE:
             self.status = ProductStatus.COURIER_IN_TRANSIT
             self.save()
-            # Запускаем таймер для изменения статуса через 2 часа
             Timer(2 * 60 * 60, self.set_delivered).start()
         elif self.status == ProductStatus.COURIER_IN_TRANSIT:
             self.status = ProductStatus.DELIVERED
