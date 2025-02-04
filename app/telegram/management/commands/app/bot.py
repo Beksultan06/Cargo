@@ -23,7 +23,7 @@ async def start(message: types.Message):
                 f"✅ Привет, {user.full_name}!\nДобро пожаловать!",
                 reply_markup=get_main_menu()
             )
-            return  # 🔥 Если пользователь есть, сразу же выходим из функции
+            return
 
         registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
         logging.info(f"Отправляем ссылку регистрации: {registration_link}")
