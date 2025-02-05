@@ -10,6 +10,8 @@ from app.telegram.management.commands.app.states import TrackState
 from app.web_app.models import Product, ProductStatus, Settings, User
 from app.telegram.management.commands.run import bot
 from django.db import transaction
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from bs4 import BeautifulSoup
 import logging
 
 router = Router()
@@ -30,7 +32,6 @@ async def start(message: types.Message):
                 reply_markup=get_main_menu()
             )
             return
-
         registration_link = f'{settings.SITE_BASE_URL}/?chat_id={chat_id}'
         logging.info(f"Отправляем ссылку регистрации: {registration_link}")
         await message.answer(
@@ -93,11 +94,38 @@ async def send_about_info(message: types.Message):
     text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
     await message.answer(text, parse_mode="Markdown")
 
+
 @router.message(lambda message: message.text == "📍 Адреса")
-async def send_about_info(message: types.Message):
-    settings = await Settings.objects.afirst()
-    text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
-    await message.answer(text, parse_mode="Markdown")
+async def show_address(message: types.Message):
+    """Обработчик кнопки '📍 Адреса'"""
+
+    settings = await sync_to_async(lambda: Settings.objects.first())()
+    if not settings or not settings.address_tg_bot:
+        await message.answer("❌ Ошибка: Адрес склада пока не указан.")
+        return
+    address_text = BeautifulSoup(settings.address_tg_bot, "html.parser").get_text()
+    address_text = address_text.replace("\xa0", " ")
+    print("После очистки:", repr(address_text))
+    await message.answer(f"📍 *Адрес склада:* \n\n`{address_text}`", parse_mode="MarkdownV2")
+    text = (
+        f"📩 Информация о складе в Кыргызстане 🇰🇬:\n\n"
+        f"⚠ Чтобы ваши посылки не потерялись, отправьте скрин заполненного адреса и получите подтверждение от менеджера.\n\n"
+        f"❗️❗️❗️ Только после подтверждения ✅ адреса Карго несет ответственность за ваши посылки 📦"
+        f"\n\n📞 {settings.phone}"
+    )
+    if settings.watapp:
+        text += f"\n🔗 WhatsApp менеджера: {settings.watapp}"
+    print("Финальный текст перед отправкой:", repr(text))
+    keyboard = None
+    if settings.watapp:
+        keyboard = types.InlineKeyboardMarkup(
+            inline_keyboard=[
+                [types.InlineKeyboardButton(text="WhatsApp менеджера", url=settings.watapp)]
+            ]
+        )
+    await message.answer(text, reply_markup=keyboard)
+
+
 
 @router.message(lambda message: message.text == "⚙️ Поддержка")
 async def send_about_info(message: types.Message):
@@ -107,8 +135,25 @@ async def send_about_info(message: types.Message):
 
 @router.message(lambda message: message.text == "✅ Добавить трек")
 async def start_add_track(message: types.Message, state: FSMContext):
-    await message.answer("✏️ Введите ваш трек-номер:", reply_markup=ReplyKeyboardRemove())
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🔙 Назад")]
+        ],
+        resize_keyboard=True
+    )
+    await message.answer("✏️ Введите ваш трек-номер:", reply_markup=keyboard)
     await state.set_state(TrackState.waiting_for_track)
+
+@router.message(lambda message: message.text == "🔙 Назад")
+async def cancel_add_track(message: types.Message, state: FSMContext):
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Добавить трек")]
+        ],
+        resize_keyboard=True
+    )
+    await state.clear()
+    await message.answer("🚫 Добавление трека отменено.", reply_markup=keyboard)
 
 @router.message(TrackState.waiting_for_track)
 async def save_track(message: types.Message, state: FSMContext):
@@ -151,7 +196,6 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         await message.answer("❌ Ошибка: Вы не зарегистрированы.")
         return
     user_products = await sync_to_async(lambda: list(Product.objects.filter(user=user)))()
-
     if not user_products:
         await message.answer("📭 У вас пока нет посылок.", reply_markup=get_main_menu())
         return
@@ -160,5 +204,4 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         text += f"🔹 **Трек:** `{product.track}`\n"
         text += f"📍 **Статус:** {product.get_status_display()}\n"
         text += "➖➖➖➖➖➖➖➖➖➖\n"
-
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")

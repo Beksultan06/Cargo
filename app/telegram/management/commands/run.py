@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from django.core.management.base import BaseCommand
 from aiogram import Dispatcher
 from app.telegram.management.commands.bot_instance import bot
-from app.telegram.management.commands.app.bot import router
 
 load_dotenv()
 
@@ -21,6 +20,8 @@ class Command(BaseCommand):
     help = "Запускает Telegram-бота"
 
     def handle(self, *args, **kwargs):
+        from app.telegram.management.commands.app.bot import router
+
         dp.include_router(router)
 
         async def main():
