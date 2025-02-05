@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from ckeditor.fields import RichTextField
 from django.contrib.auth.hashers import make_password, check_password
 import random, string
 from threading import Timer
@@ -127,14 +128,17 @@ class Manager(models.Model):
         verbose_name = "Менеджер"
         verbose_name_plural = "Менеджеры"
 
-
 class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
     address = models.CharField(max_length=100, verbose_name="Адрес")
     phone = models.CharField(max_length=50, verbose_name="Номер телефона", help_text="Тут нужен рабочий номер склада в Китае")
-    price = models.FloatField(verbose_name='Цена за кг')  # Цена за кг
+    price = models.FloatField(verbose_name='Цена за кг')
     ista = models.URLField(verbose_name='Инстаграмм', blank=True, null=True)
     watapp = models.URLField(verbose_name='Ватсап', blank=True, null=True)
+    about = RichTextField(verbose_name='О нас', blank=True, null=True)
+    instructions = RichTextField(verbose_name='инструкция', blank=True, null=True)
+    prohibited_goods = RichTextField(verbose_name='запрещенные товары', blank=True, null=True)
+    address_tg_bot = RichTextField(verbose_name='Адрес склада', blank=True, null=True)
 
     def __str__(self):
         return str(self.logo)
@@ -143,7 +147,6 @@ class Settings(models.Model):
         verbose_name = "Основная настройка"
         verbose_name_plural = "Основные настройки"
 
-
 class ProductStatus(models.TextChoices):
     WAITING_FOR_ARRIVAL = "waiting", "Ожидает поступления"
     IN_TRANSIT = "in_transit", "В пути"
@@ -151,7 +154,6 @@ class ProductStatus(models.TextChoices):
     COURIER_IN_TRANSIT = "courier_in_transit", "Курьер в пути"
     DELIVERED = "delivered", "Доставлен"
     UNKNOWN = "unknown", "Неизвестный товар"
-
 
 class Product(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, verbose_name='Пользователь', null=True, blank=True)

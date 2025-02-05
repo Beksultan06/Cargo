@@ -33,7 +33,7 @@ def get_main_menu():
         keyboard=[
             [KeyboardButton(text="🧑‍💼 Профиль"), KeyboardButton(text="📍 Адреса"), KeyboardButton(text="📦 Мои посылки")],
             [KeyboardButton(text="📕 Инструкция"), KeyboardButton(text="🚫 Запрещенные товары"), KeyboardButton(text="⚙️ Поддержка")],
-            [KeyboardButton(text="✅ Добавить трек")]
+            [KeyboardButton(text="ℹ️ О нас"), KeyboardButton(text="✅ Добавить трек")]
         ],
         resize_keyboard=True
     )

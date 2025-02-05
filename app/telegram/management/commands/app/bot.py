@@ -5,6 +5,7 @@ from app.telegram.management.commands.app.button import get_inline_keyboard, get
 get_support_buttons, get_whatsapp_manager_button
 import logging
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
+from app.web_app.models import Settings
 
 router = Router()
 
@@ -33,26 +34,7 @@ async def start(message: types.Message):
         )
     except Exception as e:
         logging.error(f"Ошибка при обработке пользователя: {e}")
-        await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
-
-
-@router.message(lambda message: message.text == "🚫 Запрещенные товары")
-async def forbidden_goods(message: types.Message):
-    text = (
-        "📢 *Список запрещенных к перевозке грузов* ❗\n\n"
-        "🔴 *Лекарственные препараты, наркотические, психотропные вещества*;\n"
-        "🔴 *Легковоспламеняющиеся, взрывчатые, едкие вещества* (фейерверки, различные газы в баллонах и т.д.);\n"
-        "🔴 *Острые, колющие, режущие предметы*;\n"
-        "🔴 *Оружие, имитация оружия*;\n"
-        "🔴 *Предметы военного характера*;\n"
-        "🔴 *Жидкие, сыпучие, порошковые, густые вещества*;\n"
-        "🔴 *Электронные сигареты*;\n\n"
-        "📌 Если у вас возникают сомнения относительно заказа какого-либо товара, *лучше напишите нам*, "
-        "и мы предоставим информацию о возможности его доставки.\n\n"
-        "⚠️ Эти товары запрещены для перевозки в соответствии с актами таможенных правил. "
-        "В случае заказа указанных товаров, *налагается штраф в размере 10-50 тысяч сом*."
-    )
-    await message.answer(text, parse_mode="Markdown")
+        await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.") 
 
 @router.message(lambda message: message.text == "⚙️ Поддержка")
 async def support_info(message: types.Message):
@@ -65,20 +47,6 @@ async def support_info(message: types.Message):
         "[🌍 LiderCargo (WhatsApp)](https://wa.me/996505180600)"
     )
     await message.answer(text, parse_mode="Markdown", reply_markup=get_support_buttons())
-
-@router.message(lambda message: message.text == "📍 Адреса")
-async def send_address_info(message: types.Message):
-    text = (
-        "📩 *Скопируйте ниже. Это адрес склада в Китае 🇨🇳:*\n\n"
-        "🟢 *АКБ-1452*\n"
-        "🟢 *17633321256*\n"
-        "🟢 *Гуандун, Фошань, Наньхай, Яхуа Логистик*\n\n"
-        "📢 Чтобы ваши посылки не потерялись, обязательно отправьте скрин *заполненного адреса* "
-        "и получите *подтверждение* от нашего менеджера.\n\n"
-        "🔹 📞 [996504546999](tel:996504546999)\n\n"
-        "‼️‼️ *Только после подтверждения ✅ адреса Карго несет ответственность за ваши посылки 📦*"
-    )
-    await message.answer(text, parse_mode="Markdown", reply_markup=get_whatsapp_manager_button())
 
 @router.message(lambda message: message.text == "🧑‍💼 Профиль")
 async def send_profile_info(message: types.Message):
@@ -101,3 +69,29 @@ async def send_profile_info(message: types.Message):
         "[🌍 LiderCargo (WhatsApp)](https://www.youtube.com/)"
     )
     await message.answer(text, parse_mode="Markdown", reply_markup=get_profile_buttons(chat_id))
+
+from django.utils.html import strip_tags
+
+@router.message(lambda message: message.text == "🚫 Запрещенные товары")
+async def forbidden_goods(message: types.Message):
+    settings = await Settings.objects.afirst()
+    text = strip_tags(settings.prohibited_goods) if settings and settings.prohibited_goods else "⚠️ Информация отсутствует."
+    await message.answer(text, parse_mode="Markdown")
+
+@router.message(lambda message: message.text == "📕 Инструкция")
+async def send_instruction(message: types.Message):
+    settings = await Settings.objects.afirst()
+    text = strip_tags(settings.instructions) if settings and settings.instructions else "⚠️ Информация отсутствует."
+    await message.answer(text, parse_mode="Markdown")
+
+@router.message(lambda message: message.text == "ℹ️ О нас")
+async def send_about_info(message: types.Message):
+    settings = await Settings.objects.afirst()
+    text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
+    await message.answer(text, parse_mode="Markdown")
+
+@router.message(lambda message: message.text == "Адрес")
+async def send_about_info(message: types.Message):
+    settings = await Settings.objects.afirst()
+    text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
+    await message.answer(text, parse_mode="Markdown")
