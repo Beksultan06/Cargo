@@ -94,8 +94,6 @@
             background-color: #ffa500;
             color: #000;
         }
-
-        /* Стили формы ввода веса */
         #weight-form {
             display: none;
             background-color: #222;
@@ -186,9 +184,6 @@
             Сохранить</button>
     </div>
 
-
-
-
     <script>
         let video = document.getElementById('video');
         let scannerContainer = document.querySelector('.scanner-container');
@@ -212,8 +207,6 @@
                     alert("Введите корректный вес!");
                     return;
                 }
-
-                // Преобразуем в int, если число целое, иначе в float
                 let weight = weightValue.includes(".") ? parseFloat(weightValue) : parseInt(weightValue);
 
                 console.log(`Отправляем вес ${weight} кг для трек-номера ${currentTrack}`);
@@ -231,11 +224,9 @@
                     if (data.success) {
                         barcodeResult.innerHTML = `✅ Вес ${data.weight} кг для <b>${currentTrack}</b> сохранён!`;
                         barcodeResult.className = "result-container success";
-
-                        // Скрываем форму ввода веса
                         weightForm.style.display = "none";
-                        weightInput.value = ""; // Очищаем поле ввода
-                        currentTrack = null; // Сбрасываем текущий трек
+                        weightInput.value = "";
+                        currentTrack = null;
 
                     } else {
                         barcodeResult.innerHTML = `❌ ${data.error}`;
@@ -323,8 +314,6 @@
                     barcodeResult.className = "result-container error";
                 }
             }
-
-            // Функция отображения формы редактирования
             function showEditForm(track, weight, status) {
                 let weightInput = document.getElementById("weight-input");
                 let statusSelect = document.getElementById("status-select");
@@ -336,8 +325,6 @@
                 document.getElementById("edit-form").style.display = "block";
                 currentTrack = track;
             }
-
-            // Отправка обновленных данных
             async function submitEditForm() {
                 let weightInput = document.getElementById("weight-input").value.trim();
                 let statusSelect = document.getElementById("status-select").value;
@@ -378,9 +365,6 @@
                     barcodeResult.className = "result-container error";
                 }
             }
-
-
-
         confirmWeightButton.addEventListener("click", submitWeight);
     </script>
 </body>

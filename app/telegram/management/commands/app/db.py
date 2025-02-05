@@ -12,5 +12,4 @@ async def update_chat_id(user, chat_id):
         await sync_to_async(user.save)()
 
 async def get_user_by_chat_id(chat_id):
-    """Асинхронно получает пользователя по chat_id"""
     return await sync_to_async(lambda: User.objects.select_related("pickup_point").filter(chat_id=chat_id).first())()

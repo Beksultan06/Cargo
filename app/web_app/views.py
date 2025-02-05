@@ -26,7 +26,7 @@ def register(request):
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
             login(request, user)
-            return redirect('cargopart')  # 🔥 Если chat_id уже есть, сразу редиректим
+            return redirect('cargopart')
 
     if request.method == 'POST':
         full_name = request.POST.get('fullName', '').strip()
@@ -70,7 +70,7 @@ def register(request):
             if user:
                 login(request, user)
                 messages.success(request, '✅ Регистрация и авторизация прошли успешно!')
-                return redirect('cargopart')  # 🔥 После регистрации сразу редиректим
+                return redirect('cargopart')
 
         except Exception as e:
             logging.error(f"Ошибка при регистрации: {e}")
@@ -163,9 +163,6 @@ def cargopart(request):
         "settings": settings,
     })
 
-
-
-
 def warehouse(request):
     query = request.GET.get('q') 
     products = Product.objects.all()
@@ -189,9 +186,6 @@ def manager(request):
     statuses = ProductStatus.choices
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
 
-
-
-
 @csrf_exempt
 def save_track(request):
     if request.method == "POST":
@@ -207,16 +201,12 @@ def save_track(request):
                 track=track,
                 defaults={"status": ProductStatus.IN_TRANSIT}
             )
-
-            # Если товар только что добавлен, то он пока без редактирования
             if created:
                 return JsonResponse({
                     "success": True,
                     "message": f"✅ Товар {track} добавлен в систему!",
                     "first_scan": True
                 })
-
-            # Если вес и статус переданы во втором сканировании - обновляем
             updated = False
             if weight:
                 try:
@@ -246,13 +236,6 @@ def save_track(request):
             return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
-
-
-
-
-
-
-
 
 @login_required
 def mainpasels(request):
@@ -348,3 +331,6 @@ class ParcelView(View):
 
 def past(request):
     return render(request, "Past.html", locals())
+
+def unknown(request):
+    return render(request, 'Unknown.html', locals())
