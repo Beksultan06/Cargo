@@ -1,11 +1,16 @@
 from aiogram import types, Router
 from aiogram.filters import Command
 from django.conf import settings
-from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons,\
-get_support_buttons, get_whatsapp_manager_button
-import logging
+from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons
+from aiogram.fsm.context import FSMContext
+from aiogram.types import ReplyKeyboardRemove
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
-from app.web_app.models import Settings
+from asgiref.sync import sync_to_async
+from app.telegram.management.commands.app.states import TrackState
+from app.web_app.models import Product, ProductStatus, Settings, User
+from app.telegram.management.commands.run import bot
+from django.db import transaction
+import logging
 
 router = Router()
 
@@ -26,7 +31,7 @@ async def start(message: types.Message):
             )
             return
 
-        registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
+        registration_link = f'{settings.SITE_BASE_URL}/?chat_id={chat_id}'
         logging.info(f"Отправляем ссылку регистрации: {registration_link}")
         await message.answer(
             "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
@@ -34,19 +39,17 @@ async def start(message: types.Message):
         )
     except Exception as e:
         logging.error(f"Ошибка при обработке пользователя: {e}")
-        await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.") 
+        await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
 
-@router.message(lambda message: message.text == "⚙️ Поддержка")
-async def support_info(message: types.Message):
-    text = (
-        "📩 *Если у вас есть вопросы? Напишите нам*\n\n"
-        "📍 *ПВЗ*: Ош\n"
-        "📍 *ПВЗ телефон*: [996505180600](tel:996558486448)\n"
-        "📍 *Часы работы*: \n"
-        "📍 *Локация на Карте*: \n\n"
-        "[🌍 LiderCargo (WhatsApp)](https://wa.me/996505180600)"
-    )
-    await message.answer(text, parse_mode="Markdown", reply_markup=get_support_buttons())
+async def notify_registration_success(chat_id, full_name):
+    try:
+        await bot.send_message(
+            chat_id,
+            f"✅ Поздравляем, {full_name}! Вы успешно зарегистрированы.\nТеперь вам доступно главное меню.",
+            reply_markup=get_main_menu()
+        )
+    except Exception as e:
+        logging.error(f"Ошибка при отправке сообщения о регистрации: {e}")
 
 @router.message(lambda message: message.text == "🧑‍💼 Профиль")
 async def send_profile_info(message: types.Message):
@@ -90,8 +93,52 @@ async def send_about_info(message: types.Message):
     text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
     await message.answer(text, parse_mode="Markdown")
 
-@router.message(lambda message: message.text == "Адрес")
+@router.message(lambda message: message.text == "📍 Адреса")
 async def send_about_info(message: types.Message):
     settings = await Settings.objects.afirst()
     text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
     await message.answer(text, parse_mode="Markdown")
+
+@router.message(lambda message: message.text == "⚙️ Поддержка")
+async def send_about_info(message: types.Message):
+    settings = await Settings.objects.afirst()
+    text = strip_tags(settings.support) if settings and settings.support else "⚠️ Информация отсутствует."
+    await message.answer(text, parse_mode="Markdown")
+
+@router.message(lambda message: message.text == "✅ Добавить трек")
+async def start_add_track(message: types.Message, state: FSMContext):
+    await message.answer("✏️ Введите ваш трек-номер:", reply_markup=ReplyKeyboardRemove())
+    await state.set_state(TrackState.waiting_for_track)
+
+@router.message(TrackState.waiting_for_track)
+async def save_track(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    track_number = message.text.strip()
+
+    if len(track_number) < 5:
+        await message.answer("❌ Ошибка: Трек-номер слишком короткий. Попробуйте снова.")
+        return
+    user = await sync_to_async(lambda: User.objects.filter(chat_id=chat_id).first())()
+    if not user:
+        await message.answer("❌ Ошибка: Вы не зарегистрированы.")
+        await state.clear()
+        return
+    existing_product = await sync_to_async(lambda: Product.objects.filter(track=track_number).first())()
+    if existing_product:
+        await message.answer(f"⚠️ Этот трек-номер уже добавлен!\n\nСтатус: {existing_product.get_status_display()}")
+        await state.clear()
+        return
+    def create_product():
+        with transaction.atomic():
+            product = Product.objects.create(
+                user=user,
+                track=track_number,
+                status=ProductStatus.WAITING_FOR_ARRIVAL
+            )
+            return product
+    product = await sync_to_async(create_product)()
+    await message.answer(
+        f"✅ Трек-номер **{track_number}** добавлен!\nСтатус: {product.get_status_display()}",
+        reply_markup=get_main_menu()
+    )
+    await state.clear()

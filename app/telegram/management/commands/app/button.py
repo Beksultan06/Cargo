@@ -6,7 +6,7 @@ def get_inline_keyboard(registration=False, chat_id=None):
         [InlineKeyboardButton(text="💬 Написать менеджеру", url="https://www.youtube.com/")]
     ]
     if registration and chat_id:
-        registration_url = f"{settings.SITE_BASE_URL}/?chat_id={chat_id}".strip()
+        registration_url = f"{settings.SITE_BASE_URL}/?chat_id={chat_id}"
         buttons.append([
             InlineKeyboardButton(
                 text='📝 Пройти регистрацию',
@@ -14,6 +14,17 @@ def get_inline_keyboard(registration=False, chat_id=None):
             )
         ])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_main_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🧑‍💼 Профиль"), KeyboardButton(text="📍 Адреса"), KeyboardButton(text="📦 Мои посылки")],
+            [KeyboardButton(text="📕 Инструкция"), KeyboardButton(text="🚫 Запрещенные товары"), KeyboardButton(text="⚙️ Поддержка")],
+            [KeyboardButton(text="ℹ️ О нас"), KeyboardButton(text="✅ Добавить трек")]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
 
 def get_profile_buttons(chat_id):
     keyboard = InlineKeyboardMarkup(
@@ -25,17 +36,6 @@ def get_profile_buttons(chat_id):
                 )
             ]
         ]
-    )
-    return keyboard
-
-def get_main_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🧑‍💼 Профиль"), KeyboardButton(text="📍 Адреса"), KeyboardButton(text="📦 Мои посылки")],
-            [KeyboardButton(text="📕 Инструкция"), KeyboardButton(text="🚫 Запрещенные товары"), KeyboardButton(text="⚙️ Поддержка")],
-            [KeyboardButton(text="ℹ️ О нас"), KeyboardButton(text="✅ Добавить трек")]
-        ],
-        resize_keyboard=True
     )
     return keyboard
 

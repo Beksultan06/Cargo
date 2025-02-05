@@ -1,7 +1,11 @@
-import logging, asyncio, django, os
+import logging
+import asyncio
+import django
+import os
 from dotenv import load_dotenv
 from django.core.management.base import BaseCommand
-from aiogram import Bot, Dispatcher
+from aiogram import Dispatcher
+from app.telegram.management.commands.bot_instance import bot
 from app.telegram.management.commands.app.bot import router
 
 load_dotenv()
@@ -11,9 +15,6 @@ logging.basicConfig(level=logging.DEBUG)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-API_TOKEN = "7916213675:AAHQ5CSaRXiybU-3c8ctLwD54WE_jtRwRvs"
-
-bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
 class Command(BaseCommand):
@@ -24,8 +25,11 @@ class Command(BaseCommand):
 
         async def main():
             try:
-                logging.info("Запуск Telegram-бота...")
+                logging.info("🚀 Запуск Telegram-бота...")
+                await bot.delete_webhook(drop_pending_updates=True)
                 await dp.start_polling(bot)
             except Exception as e:
-                logging.error(f"Ошибка при запуске бота: {e}")
-        asyncio.run(main())
+                logging.error(f"❌ Ошибка при запуске бота: {e}")
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())

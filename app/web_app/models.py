@@ -139,6 +139,7 @@ class Settings(models.Model):
     instructions = RichTextField(verbose_name='инструкция', blank=True, null=True)
     prohibited_goods = RichTextField(verbose_name='запрещенные товары', blank=True, null=True)
     address_tg_bot = RichTextField(verbose_name='Адрес склада', blank=True, null=True)
+    support = RichTextField(verbose_name='Поддержка', blank=True, null=True)
 
     def __str__(self):
         return str(self.logo)
