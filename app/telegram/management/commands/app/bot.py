@@ -142,3 +142,23 @@ async def save_track(message: types.Message, state: FSMContext):
         reply_markup=get_main_menu()
     )
     await state.clear()
+
+@router.message(lambda message: message.text == "📦 Мои посылки")
+async def show_my_packages(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    user = await sync_to_async(lambda: User.objects.filter(chat_id=chat_id).first())()
+    if not user:
+        await message.answer("❌ Ошибка: Вы не зарегистрированы.")
+        return
+    user_products = await sync_to_async(lambda: list(Product.objects.filter(user=user)))()
+
+    if not user_products:
+        await message.answer("📭 У вас пока нет посылок.", reply_markup=get_main_menu())
+        return
+    text = "📦 Ваши посылки:\n\n"
+    for product in user_products:
+        text += f"🔹 **Трек:** `{product.track}`\n"
+        text += f"📍 **Статус:** {product.get_status_display()}\n"
+        text += "➖➖➖➖➖➖➖➖➖➖\n"
+
+    await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
