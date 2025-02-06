@@ -270,13 +270,11 @@
                             },
                             body: `track=${currentTrack}&weight=${weight}`  // Удалён параметр status, так как он не нужен при сохранении веса
                         });
-
                         let data = await response.json();
-
                         if (data.success) {
                             barcodeResult.innerHTML = `✅ ${data.message}`;
                             barcodeResult.className = "result-container success";
-                            document.getElementById("edit-form").style.display = "none";  // Скрываем форму после успешного сохранения
+                            document.getElementById("edit-form").style.display = "none";
                         } else {
                             barcodeResult.innerHTML = `❌ ${data.error}`;
                             barcodeResult.className = "result-container error";
@@ -287,9 +285,6 @@
                         console.error("Ошибка при отправке данных:", error);
                     }
                 }
-
-
-
         function showEditForm(track, weight) {
             document.getElementById("edit-track").innerText = `Трек: ${track}`;
             document.getElementById("weight-input").value = weight || "";
