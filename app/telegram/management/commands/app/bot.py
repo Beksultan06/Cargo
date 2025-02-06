@@ -125,8 +125,6 @@ async def show_address(message: types.Message):
         )
     await message.answer(text, reply_markup=keyboard)
 
-
-
 @router.message(lambda message: message.text == "⚙️ Поддержка")
 async def send_about_info(message: types.Message):
     settings = await Settings.objects.afirst()
@@ -153,7 +151,7 @@ async def cancel_add_track(message: types.Message, state: FSMContext):
         resize_keyboard=True
     )
     await state.clear()
-    await message.answer("🚫 Добавление трека отменено.", reply_markup=keyboard)
+    await message.answer("🚫 Добавление трека отменено.", reply_markup=get_main_menu())
 
 @router.message(TrackState.waiting_for_track)
 async def save_track(message: types.Message, state: FSMContext):
