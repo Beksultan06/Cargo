@@ -17,6 +17,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.middleware.csrf import get_token
 from asgiref.sync import async_to_sync
+from app.telegram.management.commands.bot_instance import bot
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,7 @@ def manager(request):
     statuses = ProductStatus.choices
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
 
+
 @csrf_exempt
 def save_track(request):
     if request.method == "POST":
@@ -200,7 +202,7 @@ def save_track(request):
                 defaults={
                     "status": ProductStatus.IN_TRANSIT,
                     'created_by_manager': True
-                    }
+                }
             )
 
             logger.debug(f"Продукт найден: {product}, создан: {created}")
@@ -222,6 +224,16 @@ def save_track(request):
                 if product.status != ProductStatus.IN_OFFICE:
                     product.status = ProductStatus.IN_OFFICE
                     logger.debug(f"Статус изменён на 'В офисе' для трека {track}")
+
+                    # Проверка, есть ли пользователь у товара
+                    if product.user and product.user.chat_id:
+                        message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вы можете забрать его в любое удобное время."
+                        
+                        # Отправка уведомления через Telegram
+                        from asgiref.sync import async_to_sync
+                        async_to_sync(bot.send_message)(product.user.chat_id, message)
+                        
+                        logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
 
             if weight:
                 try:
@@ -248,6 +260,7 @@ def save_track(request):
             return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+
 
 
 @login_required
