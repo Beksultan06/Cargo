@@ -17,6 +17,7 @@ from django.views import View
 from django.middleware.csrf import get_token
 from app.telegram.management.commands.bot_instance import bot
 from asgiref.sync import async_to_sync
+from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,6 @@ def register(request):
     if chat_id:
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
-            messages.info(request, '✅ Вы уже зарегистрированы.')
             messages.info(request, '✅ Вы уже зарегистрированы.')
             return redirect('cargopart')
     if request.method == 'POST':
@@ -118,7 +118,6 @@ def cargopart(request):
         user.phone_number = phone_number
         user.pickup_point = pvz
         user.warehouse_address = warehouse_address
-        user.id_user = generate_code_from_pvz(user)
         user.id_user = generate_code_from_pvz(user)
 
         if password:
@@ -212,6 +211,22 @@ def save_track(request):
 
             logger.debug(f"Продукт найден: {product}, создан: {created}")
 
+            # Если товар существует и ожидает поступления, изменяем статус на "В пути" и сразу сохраняем
+            if not created and product.status == ProductStatus.WAITING_FOR_ARRIVAL:
+                product.status = ProductStatus.IN_TRANSIT
+                product.save()
+                logger.debug(f"Статус товара {track} изменён на 'В пути' и сохранён")
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"✅ Товар {track} уже был в системе. Статус обновлён на 'В пути'!",
+                    "track": product.track,
+                    "weight": product.weight,
+                    "status": product.status,
+                    "redirect": True  # Флаг для фронтенда, чтобы автоматически переходить к следующему сканированию
+                })
+
+            # Если товар только что создан, устанавливаем статус "В пути"
             if created:
                 product.status = ProductStatus.IN_TRANSIT
                 product.created_by_manager = True
@@ -225,21 +240,18 @@ def save_track(request):
                     "weight": product.weight,
                     "status": product.status
                 })
-            else:
-                if product.status != ProductStatus.IN_OFFICE:
-                    product.status = ProductStatus.IN_OFFICE
-                    logger.debug(f"Статус изменён на 'В офисе' для трека {track}")
 
-                    # Проверка, есть ли пользователь у товара
-                    if product.user and product.user.chat_id:
-                        message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вы можете забрать его в любое удобное время."
-                        
-                        # Отправка уведомления через Telegram
-                        from asgiref.sync import async_to_sync
-                        async_to_sync(bot.send_message)(product.user.chat_id, message)
-                        
-                        logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
+            # Если товар уже существует и не находится в офисе
+            if product.status != ProductStatus.IN_OFFICE:
+                product.status = ProductStatus.IN_OFFICE
+                logger.debug(f"Статус изменён на 'В офисе' для трека {track}")
 
+                if product.user and product.user.chat_id:
+                    message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вы можете забрать его в любое удобное время."
+                    async_to_sync(bot.send_message)(product.user.chat_id, message)
+                    logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
+
+            # Обновление веса, если он указан
             if weight:
                 try:
                     weight = float(weight) if "." in weight else int(weight)
@@ -260,13 +272,12 @@ def save_track(request):
                 "weight": product.weight,
                 "status": product.status
             })
+
         except Exception as e:
             logger.error(f"Ошибка при обработке запроса: {e}")
             return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
-
-
 
 
 
