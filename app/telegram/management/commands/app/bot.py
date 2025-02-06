@@ -3,13 +3,13 @@ from aiogram.filters import Command
 from django.conf import settings
 from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
 from app.telegram.management.commands.app.states import TrackState
 from app.web_app.models import Product, ProductStatus, Settings, User
 from app.telegram.management.commands.run import bot
 from django.db import transaction
+from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from bs4 import BeautifulSoup
 import logging
@@ -74,8 +74,6 @@ async def send_profile_info(message: types.Message):
     )
     await message.answer(text, parse_mode="Markdown", reply_markup=get_profile_buttons(chat_id))
 
-from django.utils.html import strip_tags
-
 @router.message(lambda message: message.text == "🚫 Запрещенные товары")
 async def forbidden_goods(message: types.Message):
     settings = await Settings.objects.afirst()
@@ -94,11 +92,8 @@ async def send_about_info(message: types.Message):
     text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
     await message.answer(text, parse_mode="Markdown")
 
-
 @router.message(lambda message: message.text == "📍 Адреса")
 async def show_address(message: types.Message):
-    """Обработчик кнопки '📍 Адреса'"""
-
     settings = await sync_to_async(lambda: Settings.objects.first())()
     if not settings or not settings.address_tg_bot:
         await message.answer("❌ Ошибка: Адрес склада пока не указан.")
@@ -157,7 +152,6 @@ async def cancel_add_track(message: types.Message, state: FSMContext):
 async def save_track(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     track_number = message.text.strip()
-
     if len(track_number) < 5:
         await message.answer("❌ Ошибка: Трек-номер слишком короткий. Попробуйте снова.")
         return
