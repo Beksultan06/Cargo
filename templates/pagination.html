@@ -1,4 +1,5 @@
 <style>
+        /* Общие стили для пагинации */
     .pagination {
         display: flex;
         justify-content: center;
@@ -7,14 +8,14 @@
         margin-top: 15px;
         flex-wrap: wrap;
         font-family: Arial, Helvetica, sans-serif;
-
     }
-    
+
     .pagination-links {
         display: flex;
         gap: 3px;
     }
-    
+
+    /* Стили для ссылок и кнопок пагинации */
     .pagination a, .pagination button {
         padding: 6px 8px;
         font-size: 12px;
@@ -26,21 +27,22 @@
         color: #000;
         transition: all 0.3s ease;
     }
-    
+
+    /* Наведение для ссылок и кнопок */
     .pagination a:hover, .pagination button:hover {
         background-color: #A40A5E;
         color: white;
     }
-    
-    /* ✅ Активная страница теперь полностью `#A40A5E` */
+
+    /* Полностью закрашенная активная страница */
     .pagination-page-active {
-        background-color: #A40A5E;
-        color: white;
-        border: 2px solid #A40A5E;
-        pointer-events: none; /* Делаем неактивную страницу некликабельной */
+        background-color: #A40A5E !important;  /* Принудительное применение цвета фона */
+        color: white !important;               /* Принудительное применение цвета текста */
+        border: 2px solid #A40A5E !important;  /* Принудительное применение границы */
+        pointer-events: none;                  /* Делаем активную страницу некликабельной */
         font-weight: bold;
     }
-    
+
     /* Стрелки "Вперёд" и "Назад" */
     .pagination-arrow {
         font-size: 14px;
@@ -49,41 +51,40 @@
         color: #A40A5E;
         border: 2px solid #A40A5E;
     }
-    
+
     .pagination-arrow:hover {
         background-color: #A40A5E;
         color: white;
     }
-    
+
     .pagination-text {
         font-size: 14px;
         font-weight: bold;
         font-family: Arial, Helvetica, sans-serif;
-
     }
-    
-    /* ✅ Улучшенный дизайн для мобильных устройств */
+
+    /* Адаптация для мобильных устройств */
     @media (max-width: 600px) {
         .pagination {
             flex-wrap: wrap;
             gap: 3px;
         }
-    
+
         .pagination-links {
             gap: 2px;
         }
-    
+
         .pagination a, .pagination button {
             padding: 5px 7px;
             font-size: 11px;
         }
     }
-    
+
 </style>
 <div class="pagination">
     {% if products.has_previous %}
         <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" 
-           class="pagination-arrow pagination-prev pagination-margin-right" rel="prev" aria-label="Предыдущая страница">
+           class="pagination-arrow pagination-prev" rel="prev" aria-label="Предыдущая страница">
             &lt;
         </a>
     {% endif %}

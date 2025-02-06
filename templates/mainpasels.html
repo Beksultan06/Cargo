@@ -26,9 +26,38 @@
             color: #fff;
             line-height: 1.5;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
 
         }
-
+        :root {
+            --background-color: #ffffff;
+            --text-color: #151515;
+        }
+        
+        /* Тёмная тема */
+        .dark {
+            --background-color: #151515;
+            --text-color: #ffffff;
+        }
+        
+        /* Применение переменных */
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        /* Пример применения к другим элементам */
+        .card {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+        }
+        
+        input, button {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+        }
 
         .header {
             display: flex;
@@ -527,7 +556,7 @@
 <body>
     <div class="header">
         <div class="logo">
-            <img src="{% static './assets/images/CargosLogo.png' %}" alt="Lider Cargo">
+            <img src="{{ settings.logo.url }}" alt="Lider Cargo">
         </div>
         <div class="menu-icon" onclick="toggleMenu()">☰</div>
 
@@ -566,7 +595,7 @@
                 <div class="line"></div>
                 <div class="card-row">
                     <span class="label">Вес:</span>
-                    <span class="value">{{ searched_product.weight }} кг</span>
+                    <span class="value">{{ searched_product.weight|default:"0" }} кг</span>
                 </div>
                 <div class="line"></div>
                 <div class="card-row">
@@ -602,10 +631,11 @@
                 </form>
             </div>
         {% endif %}
+ 
         {% if messages %}
     <div class="messages">
-        {% for message in messages %}
-            <p class="error-message">{{ message }}</p>
+        {% for searched_product_message in messages %}
+            <p class="error-message">{{ searched_product_message }}</p>
         {% endfor %}
     </div>
 {% endif %}
@@ -622,75 +652,12 @@
     
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <img class="menu-logo" src="{% static './assets/images/CargosLogo.png' %}" alt="">
+            <img class="menu-logo" src="{{ settings.logo.url }}" alt="">
             <button class="close-button" onclick="toggleMenu()">×</button>
         </div>
-        <ul>
-            <li onclick="showPage({% url 'cargopart' %})"><svg class="icon" width="25" height="28" viewBox="0 0 25 28"
-                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M2.21429 25.447H8.54343V16.7436C8.54343 16.3516 8.67657 16.023 8.94286 15.7578C9.208 15.4916 9.53657 15.3584 9.92857 15.3584H15.0714C15.4634 15.3584 15.7926 15.4916 16.0589 15.7578C16.324 16.023 16.4566 16.3516 16.4566 16.7436V25.447H22.7857V10.5464C22.7857 10.3704 22.7474 10.2104 22.6709 10.0664C22.5943 9.92242 22.4897 9.7967 22.3571 9.68927L13.1274 2.7327C12.9514 2.57956 12.7423 2.50299 12.5 2.50299C12.2577 2.50299 12.0491 2.57956 11.8743 2.7327L2.64286 9.68927C2.51143 9.79899 2.40686 9.9247 2.32914 10.0664C2.25143 10.2081 2.21314 10.3681 2.21429 10.5464V25.447ZM0.5 25.447V10.5464C0.5 10.1076 0.598286 9.69213 0.794857 9.30013C0.991428 8.90813 1.26229 8.58527 1.60743 8.33156L10.8389 1.3407C11.3223 0.971559 11.8743 0.786987 12.4949 0.786987C13.1154 0.786987 13.6709 0.971559 14.1611 1.3407L23.3926 8.32985C23.7389 8.58356 24.0097 8.90699 24.2051 9.30013C24.4017 9.69213 24.5 10.1076 24.5 10.5464V25.447C24.5 25.9064 24.3291 26.307 23.9874 26.6487C23.6457 26.9904 23.2451 27.1613 22.7857 27.1613H16.1274C15.7343 27.1613 15.4051 27.0287 15.14 26.7636C14.8749 26.4973 14.7423 26.1681 14.7423 25.7761V17.0744H10.2577V25.7761C10.2577 26.1693 10.1251 26.4984 9.86 26.7636C9.59486 27.0287 9.26629 27.1613 8.87429 27.1613H2.21429C1.75486 27.1613 1.35429 26.9904 1.01257 26.6487C0.670857 26.307 0.5 25.9064 0.5 25.447Z"
-                        fill="white" />
-                </svg>
-                Главная</li>
-            <li onclick="showPage({% url 'warehouse' %}')"><svg class="icon" width="27" height="27" viewBox="0 0 27 27"
-                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M8.1 5.96124H18.9C18.9 5.96124 20.9178 7.76784 22.5 8.36124C23.6184 8.78124 25.5 8.96124 25.5 8.96124C25.5 8.96124 24.4104 9.35064 23.7 9.56124C22.7736 9.83604 21.3 10.1612 21.3 10.1612H5.7C5.7 10.1612 4.2264 9.83604 3.3 9.56124C2.5896 9.35064 1.5 8.96124 1.5 8.96124C1.5 8.96124 3.3816 8.78124 4.5 8.36124C6.0822 7.76784 8.1 5.96124 8.1 5.96124Z"
-                        stroke="white" stroke-width="2" stroke-linejoin="round" />
-                    <path d="M9.90039 5.96126L13.5004 1.16125L17.1004 5.96126H9.90039Z" stroke="white" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M5.7002 10.1613V21.5613M21.3002 10.1613V21.5613" stroke="white" stroke-width="2"
-                        stroke-linecap="round" />
-                    <path d="M2.7002 21.5612H24.3002V25.1612H2.7002V21.5612Z" stroke="white" stroke-width="2"
-                        stroke-linejoin="round" />
-                </svg>
-                Склад Китай</li>
-            <li onclick="showPage({% url 'mainpasels' %})"><svg class="icon" width="25" height="31" viewBox="0 0 25 31"
-                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M11.9855 22.1038L1.5 28.3951V1.16125H23.5V28.3951L13.0145 22.1038L12.5 21.7951L11.9855 22.1038Z"
-                        stroke="white" stroke-width="2" />
-                </svg>
-                Мои посылки</li>
-            <li onclick="showPage('./Unknown.html')"><svg class="icon" width="25" height="24" viewBox="0 0 25 24"
-                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M5.84731 18.8047L7.82181 20.7858C7.92162 20.8856 8.03927 20.94 8.17473 20.9489C8.3093 20.9569 8.43497 20.9026 8.55172 20.7858C8.66846 20.6691 8.72639 20.5461 8.7255 20.4169C8.72461 20.2876 8.66668 20.1646 8.55172 20.0479L6.57722 18.0747L8.55974 16.0922C8.65955 15.9924 8.71347 15.8748 8.72149 15.7393C8.72951 15.6038 8.6756 15.4782 8.55974 15.3623C8.44388 15.2465 8.32223 15.1881 8.19478 15.1872C8.06734 15.1863 7.94569 15.2442 7.82983 15.361L5.84731 17.3448L3.8648 15.3637C3.76587 15.2638 3.64868 15.2099 3.51321 15.2019C3.37775 15.193 3.25164 15.2465 3.13489 15.3623C3.01814 15.4782 2.96021 15.6003 2.9611 15.7286C2.96199 15.8569 3.01992 15.9786 3.13489 16.0936L5.1174 18.0761L3.13489 20.0573C3.03596 20.1571 2.98204 20.2747 2.97313 20.4102C2.96422 20.5456 3.01814 20.6713 3.13489 20.7872C3.25164 20.903 3.37329 20.9614 3.49984 20.9623C3.6264 20.9632 3.74805 20.9053 3.8648 20.7885L5.84731 18.8047ZM5.84731 23.4221C4.35809 23.4221 3.09478 22.9029 2.0574 21.8647C1.01913 20.8264 0.5 19.5631 0.5 18.0747C0.5 16.5846 1.01913 15.3209 2.0574 14.2835C3.09478 13.2461 4.35809 12.7274 5.84731 12.7274C7.33654 12.7274 8.60029 13.2461 9.63856 14.2835C10.6768 15.3209 11.1955 16.5846 11.1946 18.0747C11.1946 19.5631 10.6759 20.8264 9.63856 21.8647C8.5994 22.9029 7.33565 23.4221 5.84731 23.4221ZM15.4217 14.4025C15.181 14.6083 14.8936 14.8058 14.5594 14.9947C14.2252 15.1836 13.9128 15.3293 13.6223 15.4318C13.5261 15.2447 13.4218 15.0606 13.3095 14.8797C13.1972 14.6988 13.0818 14.5348 12.9632 14.3878C14.0844 13.9217 15.0126 13.1788 15.7479 12.1593C16.4831 11.1397 16.8503 9.94059 16.8494 8.56187C16.8494 6.80528 16.2345 5.31205 15.0046 4.08216C13.7747 2.85228 12.2819 2.23734 10.5262 2.23734C8.77051 2.23734 7.27727 2.85273 6.0465 4.0835C4.81573 5.31427 4.20079 6.80707 4.20168 8.56187C4.20168 8.83281 4.2244 9.10685 4.26986 9.38402C4.31531 9.6603 4.36655 9.92499 4.42359 10.1781C4.22752 10.1888 4.01007 10.2311 3.77122 10.3051C3.53237 10.3791 3.31803 10.4535 3.1282 10.5283C3.04889 10.2494 2.98516 9.94014 2.93704 9.60059C2.88891 9.26104 2.86485 8.9148 2.86485 8.56187C2.86485 6.42473 3.60768 4.61378 5.09334 3.129C6.57811 1.64334 8.38907 0.900513 10.5262 0.900513C12.6634 0.900513 14.4748 1.64334 15.9604 3.129C17.4461 4.61467 18.188 6.42562 18.1862 8.56187C18.1862 9.51993 18.0187 10.4236 17.6836 11.273C17.3485 12.1223 16.922 12.8607 16.4042 13.4881L24.2942 21.3847C24.419 21.5095 24.4872 21.6619 24.4987 21.8419C24.5103 22.0202 24.4421 22.1833 24.2942 22.3312C24.1516 22.4738 23.9939 22.5451 23.821 22.5451C23.6481 22.5451 23.4903 22.4738 23.3477 22.3312L15.4217 14.4025Z"
-                        fill="white" />
-                </svg>
-                Неизвестные посылки</li>
-            <li onclick="logout()"><svg class="icon" width="27" height="27" viewBox="0 0 27 27" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M18.8324 2.91108H22.8321C23.5394 2.91108 24.2176 3.19201 24.7177 3.69208C25.2177 4.19215 25.4987 4.87039 25.4987 5.57759V6.91085M18.8324 24.2432H22.8321C23.5394 24.2432 24.2176 23.9623 24.7177 23.4622C25.2177 22.9621 25.4987 22.2839 25.4987 21.5767V20.2434M18.8337 13.5772H25.5M25.5 13.5772L22.8335 10.9106M25.5 13.5772L22.8335 16.2437M3.39989 23.4806L11.3995 25.8805C11.7977 26 12.2183 26.0248 12.6278 25.9528C13.0373 25.8808 13.4243 25.714 13.7579 25.4658C14.0914 25.2176 14.3623 24.8948 14.5489 24.5233C14.7355 24.1518 14.8327 23.7417 14.8326 23.3259V3.82836C14.8327 3.41258 14.7355 3.00255 14.5489 2.631C14.3623 2.25945 14.0914 1.93669 13.7579 1.68849C13.4243 1.44029 13.0373 1.27354 12.6278 1.20154C12.2183 1.12954 11.7977 1.1543 11.3995 1.27383L3.39989 3.6737C2.85062 3.83858 2.36913 4.17615 2.02689 4.63632C1.68464 5.09649 1.49987 5.65474 1.5 6.22822V20.9261C1.49987 21.4996 1.68464 22.0578 2.02689 22.518C2.36913 22.9782 2.85062 23.3157 3.39989 23.4806Z"
-                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                Выйти</li>
-            <div class="toggle-container">
-                <span style="font-size: 20px; font-weight: bold;">TEMA</span>
-                <button class="toggle-button" id="themeToggle">
-
-                    <svg class="icon moon" id="moonIcon" width="20" height="20" viewBox="0 0 27 27" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M26.5 18.5826C23.9811 19.722 21.1749 20.0667 18.4551 19.5709C15.7354 19.0752 13.2313 17.7624 11.2764 15.8075C9.32159 13.8527 8.00883 11.3486 7.51305 8.62886C7.01728 5.90911 7.36202 3.10286 8.50135 0.583984C6.49603 1.49023 4.7405 2.86943 3.38536 4.60326C2.03023 6.33709 1.11594 8.3738 0.720941 10.5386C0.325944 12.7035 0.462029 14.9318 1.11752 17.0325C1.77301 19.1332 2.92834 21.0435 4.48439 22.5996C6.04044 24.1556 7.95075 25.311 10.0514 25.9665C12.1521 26.622 14.3805 26.758 16.5453 26.363C18.7102 25.968 20.7469 25.0538 22.4807 23.6986C24.2146 22.3435 25.5938 20.588 26.5 18.5826Z"
-                            fill="white" />
-                    </svg>
-
-                    <svg class="icon sun" id="sunIcon" width="20" height="20" viewBox="0 0 36 27" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="22.5" cy="13.584" r="13" fill="#F39800" />
-                        <path d="M3.5 4.58398H9.5" stroke="#F39800" stroke-width="0.5" stroke-linecap="round" />
-                        <path d="M0.5 13.584H6.5" stroke="#F39800" stroke-width="0.5" stroke-linecap="round" />
-                        <path d="M3.5 22.584H9.5" stroke="#F39800" stroke-width="0.5" stroke-linecap="round" />
-                    </svg>
-
-                </button>
-            </div>
-
-
-        </ul>
+      
+        {% include 'menu.html' %}
+        
     </div>
 
     <script>
@@ -713,7 +680,15 @@
             // Функция для загрузки "Мои посылки"
             function fetchMyParcels() {
                 switchTab("my-parcels");  // Переключаем вкладку
-    
+            
+                // Снимаем класс 'active' со всех кнопок
+                const buttons = document.querySelectorAll(".tabs button");
+                buttons.forEach(btn => btn.classList.remove("active"));
+            
+                // Добавляем класс 'active' кнопке "Мои посылки"
+                const myParcelsButton = document.querySelector('.tabs button[onclick="fetchMyParcels()"]');
+                if (myParcelsButton) myParcelsButton.classList.add("active");
+            
                 fetch("{% url 'track_search_action' 'my-parcels' %}", {
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 })
@@ -721,14 +696,14 @@
                 .then(data => {
                     const container = document.getElementById("parcels-container");
                     if (!container) return;
-    
+            
                     container.innerHTML = "";
-    
+            
                     if (data.user_products.length === 0) {
                         container.innerHTML = "<p>У вас пока нет добавленных посылок.</p>";
                         return;
                     }
-    
+            
                     data.user_products.forEach(product => {
                         let card = document.createElement("div");
                         card.classList.add("card");
@@ -737,7 +712,7 @@
                             <div class="line"></div>
                             <div class="card-row"><span class="label">Статус:</span><span class="value">${product.status}</span></div>
                             <div class="line"></div>
-                            <div class="card-row"><span class="label">Вес:</span><span class="value">${product.weight} кг</span></div>
+                            <div class="card-row"><span class="label">Вес:</span><span class="value">${product.weight|0} кг</span></div>
                             <div class="line"></div>
                             <div class="card-row"><span class="label">Цена:</span><span class="value">${product.price} $</span></div>
                         `;
@@ -746,6 +721,7 @@
                 })
                 .catch(error => console.error("Ошибка загрузки посылок:", error));
             }
+            
     
             // Функция для отображения меню
             function toggleMenu() {

@@ -16,21 +16,12 @@ import os
 
 load_dotenv()
 
-import sys
-import logging
-
-sys.stdout.reconfigure(encoding="utf-8")
-sys.stderr.reconfigure(encoding="utf-8")
-
-logging.basicConfig(level=logging.DEBUG, encoding="utf-8")
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-SITE_BASE_URL="https://1411-158-181-248-104.ngrok-free.app"
+SITE_BASE_URL="https://0702-158-181-248-104.ngrok-free.app"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -38,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "1411-158-181-248-104.ngrok-free.app",
+    "0702-158-181-248-104.ngrok-free.app",
     "127.0.0.1",
     "localhost"
 ]
@@ -53,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'corsheaders',
+    'ckeditor',
 
     # app
     "app.web_app",
@@ -60,22 +52,10 @@ INSTALLED_APPS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://1411-158-181-248-104.ngrok-free.app"
+    "https://0702-158-181-248-104.ngrok-free.app"
 ]
 
 LOGIN_URL = '/cargopart/'
-
-# Длительность сессии (в секундах)
-SESSION_COOKIE_AGE = 1209600  # 2 недели
-
-# Обновлять сессию при каждом запросе
-SESSION_SAVE_EVERY_REQUEST = True
-
-# Сессия сохраняется после закрытия браузера
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-# Использование файлов для хранения сессий
-SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -208,21 +188,14 @@ JAZZMIN_UI_TWEAKS = {
 
 AUTH_USER_MODEL = 'web_app.User'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
+# ckeditor
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'  # URL to jQuery
+CKEDITOR_IMAGE_BACKEND = "pillow"  # Путь к пакету Pillow для обработки изображений
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',  # Вы можете настроить свою собственную панель инструментов CKEditor
+        'height': 300,
+        'width': 800,
     },
 }
