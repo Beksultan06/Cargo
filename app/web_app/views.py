@@ -197,13 +197,17 @@ def save_track(request):
 
             product, created = Product.objects.get_or_create(
                 track=track,
-                defaults={"status": ProductStatus.IN_TRANSIT}
+                defaults={
+                    "status": ProductStatus.IN_TRANSIT,
+                    'created_by_manager': True
+                    }
             )
 
             logger.debug(f"Продукт найден: {product}, создан: {created}")
 
             if created:
                 product.status = ProductStatus.IN_TRANSIT
+                product.created_by_manager = True
                 product.save()
                 logger.debug(f"Товар {track} добавлен со статусом 'В пути'")
                 return JsonResponse({
