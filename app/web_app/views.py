@@ -165,12 +165,16 @@ def warehouse(request):
     page_obj = paginate_queryset(products, request, per_page=15)
 
     return render(request, "warehouse.html", {
-        "products": page_obj,  
+        "products": page_obj,
         "query": query
     })
 
 def scaner(request):
-    return render(request, "scaner.html", locals())
+    context = {
+        'ProductStatus': ProductStatus,
+        'current_status': 'in_transit'
+    }
+    return render(request, "scaner.html", {'context': context})
 
 # @login_required
 def manager(request):
@@ -186,6 +190,8 @@ def save_track(request):
             weight = request.POST.get("weight")
             status = request.POST.get("status")
 
+            logger.debug(f"Получен запрос: track={track}, weight={weight}, status={status}")
+
             if not track:
                 return JsonResponse({"success": False, "error": "Трек-номер обязателен"}, status=400)
 
@@ -193,41 +199,52 @@ def save_track(request):
                 track=track,
                 defaults={"status": ProductStatus.IN_TRANSIT}
             )
+
+            logger.debug(f"Продукт найден: {product}, создан: {created}")
+
             if created:
+                product.status = ProductStatus.IN_TRANSIT
+                product.save()
+                logger.debug(f"Товар {track} добавлен со статусом 'В пути'")
                 return JsonResponse({
                     "success": True,
-                    "message": f"✅ Товар {track} добавлен в систему!",
-                    "first_scan": True
+                    "message": f"✅ Товар {track} добавлен в систему со статусом 'В пути'!",
+                    "first_scan": True,
+                    "track": product.track,
+                    "weight": product.weight,
+                    "status": product.status
                 })
-            updated = False
+            else:
+                if product.status != ProductStatus.IN_OFFICE:
+                    product.status = ProductStatus.IN_OFFICE
+                    logger.debug(f"Статус изменён на 'В офисе' для трека {track}")
+
             if weight:
                 try:
                     weight = float(weight) if "." in weight else int(weight)
                     product.weight = weight
-                    updated = True
+                    logger.debug(f"Вес обновлён до {weight} для трека {track}")
                 except ValueError:
+                    logger.error(f"Некорректный формат веса: {weight}")
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
 
-            if status:
-                product.status = status
-                updated = True
-
-            if updated:
-                product.save()
+            product.save()
+            logger.debug(f"Данные сохранены для трека {track}")
 
             return JsonResponse({
                 "success": True,
-                "message": f"✅ Обновлены данные для {track}",
+                "message": f"✅ Обновлены данные для {track}, статус: {product.status}",
                 "first_scan": False,
                 "track": product.track,
                 "weight": product.weight,
                 "status": product.status
             })
-
         except Exception as e:
+            logger.error(f"Ошибка при обработке запроса: {e}")
             return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
     return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+
 
 @login_required
 def mainpasels(request):
