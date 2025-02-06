@@ -15,7 +15,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #000;
@@ -26,7 +26,8 @@
             align-items: center;
             height: 100vh;
         }
-
+        
+        /* Контейнер для сканера */
         .scanner-container {
             position: relative;
             width: 100%;
@@ -35,14 +36,15 @@
             background: black;
             display: none;
         }
-
+        
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 10px;
         }
-
+        
+        /* Кнопки */
         .button-container {
             margin-top: 20px;
             display: flex;
@@ -50,7 +52,7 @@
             align-items: center;
             gap: 15px;
         }
-
+        
         .scan-button,
         .stop-button {
             background-color: #F39800;
@@ -64,12 +66,13 @@
             text-transform: uppercase;
             transition: all 0.3s;
         }
-
+        
         .stop-button {
             display: none;
             background-color: #ff4c4c;
         }
-
+        
+        /* Результат сканирования */
         .result-container {
             margin-top: 20px;
             font-size: 18px;
@@ -79,33 +82,37 @@
             border-radius: 8px;
             min-width: 250px;
         }
-
+        
         .success {
             background-color: #0a0;
             color: #fff;
         }
-
+        
         .error {
             background-color: #a00;
             color: #fff;
         }
-
+        
         .loading {
             background-color: #ffa500;
             color: #000;
         }
-
+        
+        /* Форма для ввода веса */
         #edit-form {
             display: none;
-            background: #222;
-            padding: 15px;
-            border-radius: 8px;
+            background: #333;  /* Светлый фон для формы */
+            padding: 20px;
+            border-radius: 10px;
             text-align: center;
             margin-top: 20px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
-            max-width: 300px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.5);  /* Больше тени для выделения формы */
+            max-width: 320px;
+            color: #fff;
+            z-index: 10;  /* Убедимся, что форма всегда сверху */
+            position: relative;
         }
-
+        
         #edit-form label {
             font-size: 16px;
             font-weight: bold;
@@ -113,10 +120,15 @@
             margin-bottom: 10px;
             color: #F39800;
         }
-
+        
+        #edit-form p {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
         #weight-input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             font-size: 16px;
             border: 2px solid #F39800;
             border-radius: 5px;
@@ -124,30 +136,30 @@
             color: #fff;
             text-align: center;
         }
-
+        
         #weight-input:focus {
             outline: none;
             border-color: #FFD700;
         }
-
+        
         #edit-form button {
             background-color: #F39800;
             border: none;
             border-radius: 5px;
             color: #000;
-            padding: 10px 15px;
+            padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
             font-weight: bold;
-            text-transform: uppercase;
-            margin-top: 10px;
-            transition: 0.3s;
+            margin-top: 15px;
+            transition: background 0.3s;
             width: 100%;
         }
-
+        
         #edit-form button:hover {
             background-color: #FFD700;
         }
+        
     </style>
 </head>
 
@@ -163,11 +175,12 @@
 
     <div id="barcode-result" class="result-container"></div>
 
-    <div id="edit-form">
-        <p id="edit-track"></p>
-        <label for="weight-input">Введите вес (кг):</label>
+    <!-- Форма для ввода веса -->
+    <div id="edit-form" style="display: none; margin-top: 20px;">
+        <p id="edit-track" style="font-weight: bold;"></p>
+        <label style="color: white;" for="weight-input">Введите вес (кг):</label>
         <input type="number" id="weight-input" step="0.1" placeholder="Вес в кг">
-        <button onclick="submitEditForm()">✅ Сохранить</button>
+        <button onclick="submitWeight()">✅ Сохранить</button>
     </div>
 
     <script>
@@ -180,6 +193,7 @@
 
         async function startScan() {
             if (scannerContainer.style.display === 'block') return;
+
             scannerContainer.style.display = 'block';
             scanButton.style.display = 'none';
             stopButton.style.display = 'inline-block';
@@ -221,76 +235,106 @@
         }
 
         async function checkTrackInDatabase(track) {
-                try {
-                    let response = await fetch("/save_track/", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "X-CSRFToken": document.querySelector('[name=csrf-token]').content
-                        },
-                        body: `track=${track}`
-                    });
-
-                    let data = await response.json();
-                    if (data.success) {
-                        if (data.first_scan) {
-                            // При первом сканировании просто показываем сообщение, форму не отображаем
-                            barcodeResult.innerHTML = `✅ ${data.message}`;
-                            barcodeResult.className = "result-container success";
-                        } else {
-                            // При повторном сканировании показываем форму для ввода веса
-                            barcodeResult.innerHTML = `✍️ Товар <b>${track}</b> найден. Можно ввести вес.`;
-                            barcodeResult.className = "result-container loading";
-                            showEditForm(track, data.weight);
-                        }
-                    } else {
-                        barcodeResult.innerHTML = `❌ ${data.error}`;
-                        barcodeResult.className = "result-container error";
+            try {
+                let response = await fetch("/save_track/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": document.querySelector('[name=csrf-token]').content
+                    },
+                    body: `track=${track}`
+                });
+        
+                let data = await response.json();
+                console.log("Ответ от сервера:", data);  // Лог для проверки данных от сервера
+        
+                if (data.success) {
+                    barcodeResult.innerHTML = `✅ ${data.message}`;
+                    barcodeResult.className = "result-container success";
+        
+                    // Проверяем статус товара
+                    if (data.status === "in_transit") {
+                        // Только если товар в пути, показываем форму
+                        showEditForm(track, data.weight);
+                    } else if (data.status === "waiting_for_arrival") {
+                        // Если статус "Ожидает поступления", не показываем форму
+                        console.log("Товар ожидает поступления, форма не отображается.");
                     }
-                } catch (error) {
-                    barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
+        
+                    // Переход к следующему сканированию, если нужно
+                    if (data.redirect) {
+                        setTimeout(() => {
+                            startScan();
+                        }, 1500);
+                    }
+                } else {
+                    // Если товар не найден в базе
+                    barcodeResult.innerHTML = `❌ ${data.error}`;
+                    barcodeResult.className = "result-container error";
+                    console.log("Товар не найден в базе, форма не отображается.");
+                }
+            } catch (error) {
+                barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
+                barcodeResult.className = "result-container error";
+                console.error("Ошибка при сканировании:", error);
+            }
+        }
+        
+        
+
+        async function submitWeight() {
+            let weight = document.getElementById("weight-input").value.trim();
+
+            if (!currentTrack || !weight || isNaN(weight) || weight <= 0) {
+                alert("Введите корректный вес!");
+                return;
+            }
+
+            try {
+                let response = await fetch("/save_track/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": document.querySelector('[name=csrf-token]').content
+                    },
+                    body: `track=${currentTrack}&weight=${weight}`
+                });
+
+                let data = await response.json();
+                if (data.success) {
+                    barcodeResult.innerHTML = `✅ ${data.message}`;
+                    barcodeResult.className = "result-container success";
+                    
+                    // Скрываем форму после успешного сохранения
+                    document.getElementById("edit-form").style.display = "none";
+                    document.getElementById("weight-input").value = "";  // Очищаем поле ввода веса
+
+                    // Автоматический переход к следующему сканированию после ввода веса
+                    setTimeout(() => {
+                        startScan();
+                    }, 1500);
+                } else {
+                    barcodeResult.innerHTML = `❌ ${data.error}`;
                     barcodeResult.className = "result-container error";
                 }
+            } catch (error) {
+                barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
+                barcodeResult.className = "result-container error";
+                console.error("Ошибка при отправке данных:", error);
             }
-            async function submitEditForm() {
-                    let weight = document.getElementById("weight-input").value.trim();
+        }
 
-                    // Проверка на пустой ввод или некорректный формат
-                    if (!currentTrack || !weight || isNaN(weight) || weight <= 0) {
-                        alert("Введите корректный вес!");
-                        return;
-                    }
-
-                    try {
-                        let response = await fetch("/save_track/", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/x-www-form-urlencoded",
-                                "X-CSRFToken": document.querySelector('[name=csrf-token]').content
-                            },
-                            body: `track=${currentTrack}&weight=${weight}`  // Удалён параметр status, так как он не нужен при сохранении веса
-                        });
-                        let data = await response.json();
-                        if (data.success) {
-                            barcodeResult.innerHTML = `✅ ${data.message}`;
-                            barcodeResult.className = "result-container success";
-                            document.getElementById("edit-form").style.display = "none";
-                        } else {
-                            barcodeResult.innerHTML = `❌ ${data.error}`;
-                            barcodeResult.className = "result-container error";
-                        }
-                    } catch (error) {
-                        barcodeResult.innerHTML = "❌ Ошибка связи с сервером!";
-                        barcodeResult.className = "result-container error";
-                        console.error("Ошибка при отправке данных:", error);
-                    }
-                }
+        // Функция для отображения формы ввода веса
         function showEditForm(track, weight) {
+            console.log(`Показ формы для трека: ${track}, текущий вес: ${weight}`);  // Лог для проверки
             document.getElementById("edit-track").innerText = `Трек: ${track}`;
             document.getElementById("weight-input").value = weight || "";
             document.getElementById("edit-form").style.display = "block";
         }
+        
+
     </script>
 </body>
+
 
 </html>

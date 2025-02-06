@@ -13,6 +13,10 @@ from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from bs4 import BeautifulSoup
 import logging
+import asyncio
+
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -197,3 +201,11 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         text += f"📍 **Статус:** {product.get_status_display()}\n"
         text += "➖➖➖➖➖➖➖➖➖➖\n"
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
+    
+    
+async def send_telegram_message(chat_id, message):
+    try:
+        await bot.send_message(chat_id, message)
+        logger.debug(f"Уведомление отправлено пользователю с chat_id {chat_id}")
+    except Exception as e:
+        logger.error(f"Ошибка при отправке сообщения в Telegram: {e}")

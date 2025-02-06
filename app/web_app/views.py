@@ -18,6 +18,8 @@ from django.middleware.csrf import get_token
 from app.telegram.management.commands.bot_instance import bot
 from asgiref.sync import async_to_sync
 from asgiref.sync import sync_to_async
+import asyncio
+from app.telegram.management.commands.app.bot import send_telegram_message
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +143,7 @@ def cargopart(request):
         messages.success(request, "✅ Данные успешно обновлены!")
         return redirect("cargopart")
 
-    settings = Settings.objects.first()
+    # settings = Settings.objects.first()
 
     user_data = {
         "full_name": user.full_name,
@@ -154,11 +156,11 @@ def cargopart(request):
     return render(request, "Cargopart.html", {
         "user_data": user_data,
         "user": user,
-        "settings": settings,
+        # "settings": settings,
     })
 
 def warehouse(request):
-    settings = Settings.objects.latest("id")
+    # settings = Settings.objects.latest("id")
     query = request.GET.get('q') 
     products = Product.objects.all()
 
@@ -170,7 +172,7 @@ def warehouse(request):
     return render(request, "warehouse.html", {
         "products": page_obj,  
         "query": query,
-        'settings': settings,
+        # 'settings': settings,
         "products": page_obj,
         "query": query
     })
@@ -187,103 +189,92 @@ def manager(request):
     track = request.GET.get('track', '')
     statuses = ProductStatus.choices
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
-
 @csrf_exempt
 def save_track(request):
-    if request.method == "POST":
-        try:
-            track = request.POST.get("track")
-            weight = request.POST.get("weight")
-            status = request.POST.get("status")
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
 
-            logger.debug(f"Получен запрос: track={track}, weight={weight}, status={status}")
+    track = request.POST.get("track")
+    weight = request.POST.get("weight")
 
-            if not track:
-                return JsonResponse({"success": False, "error": "Трек-номер обязателен"}, status=400)
+    logger.debug(f"Получен запрос: track={track}, weight={weight}")
 
-            product, created = Product.objects.get_or_create(
-                track=track,
-                defaults={
-                    "status": ProductStatus.IN_TRANSIT,
-                    'created_by_manager': True
-                }
-            )
+    if not track:
+        return JsonResponse({"success": False, "error": "Трек-номер обязателен"}, status=400)
 
-            logger.debug(f"Продукт найден: {product}, создан: {created}")
+    try:
+        product, created = Product.objects.get_or_create(
+            track=track,
+            defaults={"status": ProductStatus.IN_TRANSIT, 'created_by_manager': True}
+        )
 
-            # Если товар существует и ожидает поступления, изменяем статус на "В пути" и сразу сохраняем
-            if not created and product.status == ProductStatus.WAITING_FOR_ARRIVAL:
-                product.status = ProductStatus.IN_TRANSIT
-                product.save()
-                logger.debug(f"Статус товара {track} изменён на 'В пути' и сохранён")
+        if created:
+            logger.debug(f"Новый товар {track} добавлен со статусом 'В пути'")
+            return JsonResponse({
+                "success": True,
+                "message": f"✅ Новый товар {track} добавлен со статусом 'В пути'!",
+                "status": product.status,
+                "redirect": True
+            })
 
+        if product.status == ProductStatus.WAITING_FOR_ARRIVAL:
+            product.status = ProductStatus.IN_TRANSIT
+            product.save()
+            logger.debug(f"Товар {track} обновлён до статуса 'В пути'")
+            return JsonResponse({
+                "success": True,
+                "message": f"✅ Статус товара {track} обновлён до 'В пути'!",
+                "status": product.status,
+                "redirect": True
+            })
+
+        if product.status == ProductStatus.IN_TRANSIT:
+            if not weight:
+                logger.debug(f"Товар {track} в статусе 'В пути', требуется ввод веса")
                 return JsonResponse({
                     "success": True,
-                    "message": f"✅ Товар {track} уже был в системе. Статус обновлён на 'В пути'!",
-                    "track": product.track,
-                    "weight": product.weight,
+                    "message": f"✍️ Товар {track} найден в статусе 'В пути'. Введите вес для продолжения.",
                     "status": product.status,
-                    "redirect": True  # Флаг для фронтенда, чтобы автоматически переходить к следующему сканированию
+                    "require_weight": True
                 })
-
-            # Если товар только что создан, устанавливаем статус "В пути"
-            if created:
-                product.status = ProductStatus.IN_TRANSIT
-                product.created_by_manager = True
-                product.save()
-                logger.debug(f"Товар {track} добавлен со статусом 'В пути'")
-                return JsonResponse({
-                    "success": True,
-                    "message": f"✅ Товар {track} добавлен в систему со статусом 'В пути'!",
-                    "first_scan": True,
-                    "track": product.track,
-                    "weight": product.weight,
-                    "status": product.status
-                })
-
-            # Если товар уже существует и не находится в офисе
-            if product.status != ProductStatus.IN_OFFICE:
-                product.status = ProductStatus.IN_OFFICE
-                logger.debug(f"Статус изменён на 'В офисе' для трека {track}")
-
-                if product.user and product.user.chat_id:
-                    message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вы можете забрать его в любое удобное время."
-                    async_to_sync(bot.send_message)(product.user.chat_id, message)
-                    logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
-
-            # Обновление веса, если он указан
-            if weight:
+            else:
                 try:
-                    weight = float(weight) if "." in weight else int(weight)
-                    product.weight = weight
-                    logger.debug(f"Вес обновлён до {weight} для трека {track}")
+                    product.weight = float(weight)
                 except ValueError:
                     logger.error(f"Некорректный формат веса: {weight}")
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
+                
+                product.status = ProductStatus.IN_OFFICE
+                product.save()
+                logger.debug(f"Вес установлен, товар {track} обновлён до статуса 'В офисе'")
 
-            product.save()
-            logger.debug(f"Данные сохранены для трека {track}")
-
-            return JsonResponse({
-                "success": True,
-                "message": f"✅ Обновлены данные для {track}, статус: {product.status}",
-                "first_scan": False,
-                "track": product.track,
-                "weight": product.weight,
-                "status": product.status
-            })
-
-        except Exception as e:
-            logger.error(f"Ошибка при обработке запроса: {e}")
-            return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
-
-    return JsonResponse({"success": False, "error": "Метод запроса должен быть POST"}, status=405)
+                # Отправка уведомления через Telegram с использованием безопасного запуска асинхронной задачи
+                if product.user and product.user.chat_id:
+                    message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вес: {product.weight} кг. Заберите его в удобное время."
+                    async_to_sync(send_telegram_message)(product.user.chat_id, message)
+                    logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
 
 
+                return JsonResponse({
+                    "success": True,
+                    "message": f"✅ Товар {track} прибыл в офис! Пользователь уведомлён.",
+                    "status": product.status,
+                    "redirect": True
+                })
+
+        return JsonResponse({
+            "success": True,
+            "message": f"ℹ️ Товар {track} уже находится в статусе '{product.get_status_display()}'.",
+            "status": product.status
+        })
+
+    except Exception as e:
+        logger.error(f"Ошибка при обработке запроса: {e}")
+        return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
 @login_required
 def mainpasels(request):
-    settings = Settings.objects.latest("id")
+    # settings = Settings.objects.latest("id")
     """Главная страница с посылками пользователя"""
     user = request.user
     status_filter = request.GET.get('status', 'in_office')
@@ -305,14 +296,14 @@ def mainpasels(request):
         'total_count': parcels.count(),
         'total_weight': round(total_weight, 2),
         'total_price': round(total_price, 2),
-        'settings': settings,
+        # 'settings': settings,
         
     })
 
 
 @method_decorator(login_required, name='dispatch')
 class ParcelView(View):
-    settings = Settings.objects.latest("id")
+    # settings = Settings.objects.latest("id")
     def get(self, request, action=None, track=None):
         if action == "search":
             return self.track_search(request)
@@ -382,11 +373,11 @@ def past(request):
     return render(request, "Past.html", locals())
 
 def unknown(request):
-    settings = Settings.objects.latest("id")
+    # settings = Settings.objects.latest("id")
     query = request.GET.get('q', '')
     if query:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN, track__icontains=query)
     else:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN)
     
-    return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query, 'settings': settings})
+    # return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query, 'settings': settings})
