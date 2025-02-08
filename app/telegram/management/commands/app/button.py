@@ -66,3 +66,14 @@ def get_package_options_keyboard(track_number):
         ]
     ])
     return keyboard
+
+def get_profile_courier():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📍 Адреса")],
+            [KeyboardButton(text="📕 Инструкция"), KeyboardButton(text="⚙️ Поддержка")],
+            [KeyboardButton(text="ℹ️ О нас")]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
