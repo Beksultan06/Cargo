@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from app.web_app.models import Settings
 from django.utils.html import strip_tags
 from app.telegram.management.commands.app.button import get_profile_courier
+from app.telegram.management.commands.bot_instance import bot_cuorier
 
 router = Router()
 
@@ -27,3 +28,6 @@ async def send_about_info(message: types.Message):
     settings = await Settings.objects.afirst()
     text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
     await message.answer(text, parse_mode="Markdown")
+
+async def send_telegram_message_courier(chat_id, message):
+    await bot_cuorier.send_message(chat_id, message)
