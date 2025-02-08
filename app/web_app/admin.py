@@ -1,5 +1,5 @@
 from django.contrib import admin
-from app.web_app.models import User, Pvz, Settings, Product, Manager
+from app.web_app.models import Notification, User, Pvz, Settings, Product, Manager
 from django.utils.html import format_html
 
 class PvzInline(admin.TabularInline):
@@ -42,3 +42,5 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
     list_display = ['id', 'username', 'full_name']
+
+admin.site.register(Notification)

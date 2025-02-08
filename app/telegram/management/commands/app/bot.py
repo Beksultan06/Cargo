@@ -1,7 +1,7 @@
 from aiogram import types, Router
 from aiogram.filters import Command
 from django.conf import settings
-from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons
+from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_package_options_keyboard, get_profile_buttons
 from aiogram.fsm.context import FSMContext
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
@@ -13,8 +13,6 @@ from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from bs4 import BeautifulSoup
 import logging
-import asyncio
-
 
 logger = logging.getLogger(__name__)
 
@@ -201,11 +199,24 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         text += f"📍 **Статус:** {product.get_status_display()}\n"
         text += "➖➖➖➖➖➖➖➖➖➖\n"
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
-    
-    
-async def send_telegram_message(chat_id, message):
+
+async def send_telegram_message(chat_id, message, track_number=None):
     try:
-        await bot.send_message(chat_id, message)
+        if track_number:
+            keyboard = get_package_options_keyboard(track_number)
+            await bot.send_message(chat_id, message, reply_markup=keyboard)
+        else:
+            await bot.send_message(chat_id, message)
         logger.debug(f"Уведомление отправлено пользователю с chat_id {chat_id}")
     except Exception as e:
         logger.error(f"Ошибка при отправке сообщения в Telegram: {e}")
+
+@router.callback_query(lambda c: c.data.startswith('pickup_') or c.data.startswith('deliver_'))
+async def handle_package_action(callback_query: types.CallbackQuery):
+    action, track_number = callback_query.data.split('_', 1)
+    if action == "pickup":
+        response_text = f"✅ Вы выбрали забрать товар с трек-номером {track_number} со склада."
+    elif action == "deliver":
+        response_text = f"🚚 Вы выбрали доставку товара с трек-номером {track_number} (Доставка беслатная)."
+    await callback_query.answer()
+    await callback_query.message.answer(response_text)

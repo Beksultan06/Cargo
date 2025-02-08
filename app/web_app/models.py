@@ -212,3 +212,10 @@ class Product(models.Model):
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
         ordering = ['-created_at']
+
+
+class Notification(models.Model):
+    text = RichTextField(verbose_name='Текст')
+
+    class Meta:
+        verbose_name_plural = 'Уведомление'

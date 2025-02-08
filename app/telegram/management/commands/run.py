@@ -1,6 +1,5 @@
 import logging
 import asyncio
-import django
 import os
 from dotenv import load_dotenv
 from django.core.management.base import BaseCommand
@@ -12,7 +11,9 @@ load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-django.setup()
+
+# Удаляем повторный вызов django.setup(), чтобы избежать ошибки повторной инициализации
+# django.setup()
 
 dp = Dispatcher()
 
@@ -26,11 +27,10 @@ class Command(BaseCommand):
 
         async def main():
             try:
-                logging.info("🚀 Запуск Telegram-бота...")
+                logging.info("\ud83d\ude80 Запуск Telegram-бота...")
                 await bot.delete_webhook(drop_pending_updates=True)
                 await dp.start_polling(bot)
             except Exception as e:
-                logging.error(f"❌ Ошибка при запуске бота: {e}")
+                logging.error(f"\u274c Ошибка при запуске бота: {e}")
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+        asyncio.run(main())

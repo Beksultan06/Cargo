@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-SITE_BASE_URL="https://0702-158-181-248-104.ngrok-free.app"
+SITE_BASE_URL="https://ea45-158-181-248-104.ngrok-free.app"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "0702-158-181-248-104.ngrok-free.app",
+    "ea45-158-181-248-104.ngrok-free.app",
     "127.0.0.1",
     "localhost"
 ]
@@ -52,7 +52,7 @@ INSTALLED_APPS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://0702-158-181-248-104.ngrok-free.app"
+    "https://ea45-158-181-248-104.ngrok-free.app"
 ]
 
 LOGIN_URL = '/cargopart/'
@@ -99,15 +99,12 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'we',
-        'USER': 'we',
-        'PASSWORD': '12345678',
-        'HOST': 'localhost',
-        'PORT': 5432,
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -155,39 +152,39 @@ MEDIA_ROOT = BASE_DIR/ 'media'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-#jazzmin
+
 JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
+    "navbar_small_text": True,
     "footer_small_text": False,
-    "body_small_text": True,
-    "brand_small_text": False,
-    "brand_colour": "navbar-success",
-    "accent": "accent-success",
-    "navbar": "navbar-success navbar-dark",
-    "no_navbar_border": True,
+    "body_small_text": False,
+    "brand_small_text": True,
+    "brand_colour": "navbar-gray",
+    "accent": "accent-warning",
+    "navbar": "navbar-gray navbar-dark",
+    "no_navbar_border": False,
     "navbar_fixed": False,
     "layout_boxed": False,
-    "footer_fixed": True,
+    "footer_fixed": False,
     "sidebar_fixed": True,
-    "sidebar": "sidebar-light-success",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": True,
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_compact_style": True,
+    "sidebar": "sidebar-dark-warning",
+    "sidebar_nav_small_text": True,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": True,
-    "theme": "default",
+    "theme": "minty",
     "dark_mode_theme": None,
     "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
+        "primary": "btn-outline-primary",
+        "secondary": "btn-outline-secondary",
         "info": "btn-info",
         "warning": "btn-outline-warning",
-        "danger": "btn-outline-danger",
+        "danger": "btn-danger",
         "success": "btn-success"
-    },
-    "actions_sticky_top": False
+    }
 }
+
 
 AUTH_USER_MODEL = 'web_app.User'
 

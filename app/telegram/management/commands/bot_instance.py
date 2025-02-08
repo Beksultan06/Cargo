@@ -4,4 +4,4 @@ import os
 
 load_dotenv()
 
-bot = Bot(token='7371249679:AAGRkXzHIpJHHAaDhKxULM7iP7q8LqEw2iA')
+bot = Bot(token='7916213675:AAHQ5CSaRXiybU-3c8ctLwD54WE_jtRwRvs')

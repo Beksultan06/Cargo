@@ -189,6 +189,8 @@ def manager(request):
     track = request.GET.get('track', '')
     statuses = ProductStatus.choices
     return render(request, 'manager.html', {'track': track, 'statuses': statuses})
+
+
 @csrf_exempt
 def save_track(request):
     if request.method != "POST":
@@ -251,8 +253,9 @@ def save_track(request):
                 # Отправка уведомления через Telegram с использованием безопасного запуска асинхронной задачи
                 if product.user and product.user.chat_id:
                     message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вес: {product.weight} кг. Заберите его в удобное время."
-                    async_to_sync(send_telegram_message)(product.user.chat_id, message)
+                    async_to_sync(send_telegram_message)(product.user.chat_id, message, track_number=track)
                     logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
+
 
 
                 return JsonResponse({
