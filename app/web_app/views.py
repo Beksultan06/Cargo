@@ -6,7 +6,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from app.telegram.management.commands.app.bot import notify_registration_success
-from app.telegram.management.commands.app.courier import send_telegram_message_courier
+from app.telegram.management.commands.app.courier import send_telegram_message_cuorier
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
 from .models import ProductStatus, Settings, User, Pvz, Product, generate_code_from_pvz
@@ -16,11 +16,7 @@ from app.web_app.forms import TrackingSearchForm
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.middleware.csrf import get_token
-from app.telegram.management.commands.bot_instance import bot
 from asgiref.sync import async_to_sync
-from asgiref.sync import sync_to_async
-import asyncio
-from app.telegram.management.commands.app.bot import send_telegram_message
 
 logger = logging.getLogger(__name__)
 
@@ -263,7 +259,7 @@ def save_track(request):
                         f"💵 Стоимость: {product.price} $\n\n"
                         f"Пожалуйста, заберите посылку в ближайшее время!"
                     )
-                    async_to_sync(send_telegram_message_courier)(product.user.chat_id, message)
+                    async_to_sync(send_telegram_message_cuorier)(product.user.chat_id, message, product.track)
                     logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
 
                 return JsonResponse({
