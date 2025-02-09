@@ -643,7 +643,7 @@
             window.location.href = url;
         }
         function logout() {
-            window.location.href = 'enter.html';
+            window.location.href = '{% url 'login' %}';
         }
         const themeToggle = document.getElementById('themeToggle');
         const savedTheme = localStorage.getItem('theme') || 'light';

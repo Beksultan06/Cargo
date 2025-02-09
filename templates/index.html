@@ -12,16 +12,15 @@
 <body>
     <div class="registration-container">
         <div class="header">
-            <img src="{% static 'assets/images/CargosLogo.png' %}" alt="Lider Cargo Logo" class="logo">
+            <img src="{{settings.logo.url}}" alt="Lider Cargo Logo" class="logo">
         </div>
         <form class="registration-form" method="POST" action="{% url 'register' %}">
             {% csrf_token %}
             <input type="hidden" name="chat_id" value="{{ request.GET.chat_id }}">
             <label for="fullName">ФИО</label>
             <input type="text" id="fullName" name="fullName" placeholder="ФИО (обязательно)" required>
-            <label for="phone">Телефон</label>
-            <input type="tel" id="phone" name="phone" placeholder="Телефон (в международном формате)" required>
-            <label for="pvz">ПВЗ (Пункт выдачи посылок)</label>
+            <label for="phone">Телефон (в международном формате)</label>
+            <input type="tel" id="phone" name="phone" placeholder="+996XXXXXXXXX" required>
             <select id="pvz" name="pvz" required>
                 <option value="">Выберите ПВЗ</option>
                 {% for point in pvz_list %}
@@ -49,3 +48,25 @@
     <script src="{% static './assets/main.js' %}"></script>
 </body>
 </html>
+<script>
+    const phoneInput = document.getElementById('phone');
+
+    // Добавляем +996 при фокусе, если поле пустое
+    phoneInput.addEventListener('focus', function() {
+        if (!phoneInput.value.startsWith('+996')) {
+            phoneInput.value = '+996';
+        }
+    });
+
+    // Запрещаем удалять +996
+    phoneInput.addEventListener('input', function() {
+        if (!phoneInput.value.startsWith('+996')) {
+            phoneInput.value = '+996 ';
+        }
+    });
+
+    // Убираем лишние пробелы при отправке формы
+    document.querySelector('form').addEventListener('submit', function(e) {
+        phoneInput.value = phoneInput.value.replace(/\s+/g, '');
+    });
+</script>

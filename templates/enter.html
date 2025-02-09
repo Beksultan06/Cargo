@@ -82,30 +82,36 @@
         .toggle-password:focus {
             outline: none;
         }
+        .visota {
+            height: 500px;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="container">
+        <div class="visota"></div>
         <div class="logo">
-            <img src="{% static 'assets/images/CargosLogo.png' %}" alt="Lider Cargo">
+            <img src="{{settings.logo.url}}" alt="Lider Cargo">
         </div>
         <form class="login-form" id="loginForm">
             {% csrf_token %}
 
             <label for="phone">Телефон (в международном формате)</label>
-            <input type="text" id="phone" name="phone" placeholder="+996999999999" required>
+            <input type="tel" id="phone" name="phone" placeholder="+996XXXXXXXXX" required>
 
             <label for="password">Пароль</label>
             <div class="password-container">
                 <input type="password" id="password" name="password" placeholder="********" required>
-                <button type="button" id="togglePassword" class="toggle-password">👁</button>
+                <button type="button" id="togglePassword" class="toggle-password"></button>
             </div>
 
             <button type="submit" class="login-button">ВОЙТИ</button>
         </form>
+        <div class="visota"></div>
     </div>
+    <script src="{% static './assets/main.js' %}"></script>
 
     <script>
         document.getElementById("loginForm").addEventListener("submit", function (event) {
@@ -137,6 +143,28 @@
                     })
                     .catch(error => console.error("Ошибка:", error));
             });
+    </script>
+    <script>
+        const phoneInput = document.getElementById('phone');
+    
+        // Добавляем +996 при фокусе, если поле пустое
+        phoneInput.addEventListener('focus', function() {
+            if (!phoneInput.value.startsWith('+996')) {
+                phoneInput.value = '+996';
+            }
+        });
+    
+        // Запрещаем удалять +996
+        phoneInput.addEventListener('input', function() {
+            if (!phoneInput.value.startsWith('+996')) {
+                phoneInput.value = '+996 ';
+            }
+        });
+    
+        // Убираем лишние пробелы при отправке формы
+        document.querySelector('form').addEventListener('submit', function(e) {
+            phoneInput.value = phoneInput.value.replace(/\s+/g, '');
+        });
     </script>
 </body>
 </html>
