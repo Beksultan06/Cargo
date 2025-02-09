@@ -5,7 +5,7 @@ from django.utils.html import strip_tags
 from app.telegram.management.commands.app.button import get_profile_courier
 from app.telegram.management.commands.bot_instance import bot_cuorier
 from aiogram.types import CallbackQuery
-from app.web_app.models import Product  # Импортируем модель
+from app.web_app.models import Product
 from asgiref.sync import sync_to_async
 
 router = Router()
@@ -47,7 +47,6 @@ async def handle_accept_callback(callback_query: CallbackQuery):
     if product:
         product.status = ProductStatus.COURIER_IN_TRANSIT
         await sync_to_async(product.save)()
-
         await callback_query.answer("📦 Посылка принята и передана курьеру!", show_alert=True)
         await callback_query.message.edit_text(
             f"📦 Посылка с трек-номером {track_number} принята и передана курьеру! 🚚"

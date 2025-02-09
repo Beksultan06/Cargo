@@ -140,7 +140,7 @@ def cargopart(request):
         messages.success(request, "✅ Данные успешно обновлены!")
         return redirect("cargopart")
 
-    # settings = Settings.objects.first()
+    settings = Settings.objects.first()
 
     user_data = {
         "full_name": user.full_name,
@@ -153,11 +153,11 @@ def cargopart(request):
     return render(request, "Cargopart.html", {
         "user_data": user_data,
         "user": user,
-        # "settings": settings,
+        "settings": settings,
     })
 
 def warehouse(request):
-    # settings = Settings.objects.latest("id")
+    settings = Settings.objects.latest("id")
     query = request.GET.get('q') 
     products = Product.objects.all()
 
@@ -169,7 +169,7 @@ def warehouse(request):
     return render(request, "warehouse.html", {
         "products": page_obj,  
         "query": query,
-        # 'settings': settings,
+        'settings': settings,
         "products": page_obj,
         "query": query
     })
@@ -281,7 +281,7 @@ def save_track(request):
 
 @login_required
 def mainpasels(request):
-    # settings = Settings.objects.latest("id")
+    settings = Settings.objects.latest("id")
     """Главная страница с посылками пользователя"""
     user = request.user
     status_filter = request.GET.get('status', 'in_office')
@@ -303,14 +303,14 @@ def mainpasels(request):
         'total_count': parcels.count(),
         'total_weight': round(total_weight, 2),
         'total_price': round(total_price, 2),
-        # 'settings': settings,
+        'settings': settings,
         
     })
 
 
 @method_decorator(login_required, name='dispatch')
 class ParcelView(View):
-    # settings = Settings.objects.latest("id")
+    settings = Settings.objects.latest("id")
     def get(self, request, action=None, track=None):
         if action == "search":
             return self.track_search(request)
@@ -380,11 +380,11 @@ def past(request):
     return render(request, "Past.html", locals())
 
 def unknown(request):
-    # settings = Settings.objects.latest("id")
+    settings = Settings.objects.latest("id")
     query = request.GET.get('q', '')
     if query:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN, track__icontains=query)
     else:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN)
     
-    # return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query, 'settings': settings})
+    return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query, 'settings': settings})

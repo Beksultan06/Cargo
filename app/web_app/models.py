@@ -219,3 +219,64 @@ class Notification(models.Model):
 
     class Meta:
         verbose_name_plural = 'Уведомление'
+
+# Определим типы платежей
+PAYMENT_CHOICES = (
+    ("MBANK", "MBANK"),
+    ("Наличный", "Наличный"),
+)
+
+class Courier(models.Model):
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        verbose_name='Пользователь',
+        null=True,
+        blank=True
+    )
+    track = models.ForeignKey(
+        'Product',
+        on_delete=models.SET_NULL,
+        verbose_name='Трек номер',
+        null=True,
+        blank=True
+    )
+    address = models.CharField(
+        max_length=155,
+        verbose_name='Адрес',
+        help_text="Введите адрес доставки"
+    )
+    phone = models.CharField(
+        max_length=20,
+        verbose_name='Номер телефона',
+        help_text="Введите номер телефона"
+    )
+    type_payment = models.CharField(
+        max_length=20,
+        choices=PAYMENT_CHOICES,
+        verbose_name='Тип платежа'
+    )
+    status = models.CharField(
+        max_length=20,
+        verbose_name="Статус доставки",
+        editable=False
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
+
+    def save(self, *args, **kwargs):
+        if self.track:
+            self.status = self.track.status
+        else:
+            self.status = "Неизвестен"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Курьер для {self.track.track if self.track else 'Неизвестный трек'} - Статус: {self.status}"
+
+    class Meta:
+        verbose_name = "Курьер"
+        verbose_name_plural = "Курьеры"
+        ordering = ['-created_at']
