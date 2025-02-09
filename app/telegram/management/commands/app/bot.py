@@ -1,7 +1,7 @@
 from aiogram import types, Router
 from aiogram.filters import Command
 from django.conf import settings
-from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons
+from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_package_options_keyboard, get_profile_buttons
 from aiogram.fsm.context import FSMContext
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
@@ -13,8 +13,6 @@ from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from bs4 import BeautifulSoup
 import logging
-import asyncio
-
 
 logger = logging.getLogger(__name__)
 
@@ -201,8 +199,7 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         text += f"📍 **Статус:** {product.get_status_display()}\n"
         text += "➖➖➖➖➖➖➖➖➖➖\n"
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
-    
-    
+
 async def send_telegram_message(chat_id, message):
     try:
         await bot.send_message(chat_id, message)

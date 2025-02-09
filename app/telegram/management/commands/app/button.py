@@ -55,3 +55,24 @@ def get_whatsapp_manager_button():
         ]
     )
     return keyboard
+
+
+def get_package_options_keyboard(track_number):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🏢 Забрать со склада", callback_data=f"pickup_{track_number}"),
+            InlineKeyboardButton(text="🚚 Доставить", callback_data=f"deliver_{track_number}")
+        ]
+    ])
+    return keyboard
+
+def get_profile_courier():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📍 Адреса")],
+            [KeyboardButton(text="📕 Инструкция"), KeyboardButton(text="⚙️ Поддержка")],
+            [KeyboardButton(text="ℹ️ О нас")]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard

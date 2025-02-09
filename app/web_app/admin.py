@@ -1,5 +1,5 @@
 from django.contrib import admin
-from app.web_app.models import User, Pvz, Settings, Product, Manager
+from app.web_app.models import Notification, User, Pvz, Settings, Product, Manager, Courier
 from django.utils.html import format_html
 
 class PvzInline(admin.TabularInline):
@@ -36,9 +36,18 @@ class SettingsAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('track weight price status created_at'.split())
     # readonly_fields = ('track', 'price')
+    list_filter = ('status',)
     search_fields = ('track', 'status')
     list_editable = ('status',)
 
 @admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
     list_display = ['id', 'username', 'full_name']
+
+admin.site.register(Notification)
+
+@admin.register(Courier)
+class CourierAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'track', 'status']
+    list_filter = ['id', 'user', 'track', 'status']
+    search_fields = ['user', 'track', 'status']

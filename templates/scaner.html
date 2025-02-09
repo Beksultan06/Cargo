@@ -252,25 +252,23 @@
                     barcodeResult.innerHTML = `✅ ${data.message}`;
                     barcodeResult.className = "result-container success";
         
-                    // Проверяем статус товара
-                    if (data.status === "in_transit") {
-                        // Только если товар в пути, показываем форму
+                    // Проверка флага require_weight для отображения формы
+                    if (data.status === "in_transit" && data.require_weight) {
                         showEditForm(track, data.weight);
-                    } else if (data.status === "waiting_for_arrival") {
-                        // Если статус "Ожидает поступления", не показываем форму
-                        console.log("Товар ожидает поступления, форма не отображается.");
+                    } else {
+                        document.getElementById("edit-form").style.display = "none";
+                        console.log("Форма не отображается, так как require_weight:", data.require_weight);
                     }
         
-                    // Переход к следующему сканированию, если нужно
                     if (data.redirect) {
                         setTimeout(() => {
                             startScan();
                         }, 1500);
                     }
                 } else {
-                    // Если товар не найден в базе
                     barcodeResult.innerHTML = `❌ ${data.error}`;
                     barcodeResult.className = "result-container error";
+                    document.getElementById("edit-form").style.display = "none";
                     console.log("Товар не найден в базе, форма не отображается.");
                 }
             } catch (error) {

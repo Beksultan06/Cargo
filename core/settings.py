@@ -105,6 +105,7 @@ DATABASES = {
     }
 }
 
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -151,39 +152,39 @@ MEDIA_ROOT = BASE_DIR/ 'media'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-#jazzmin
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": True,
-    "brand_small_text": False,
-    "brand_colour": "navbar-success",
-    "accent": "accent-success",
-    "navbar": "navbar-success navbar-dark",
-    "no_navbar_border": True,
-    "navbar_fixed": False,
-    "layout_boxed": False,
-    "footer_fixed": True,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-light-success",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": True,
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_compact_style": True,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": True,
-    "theme": "default",
-    "dark_mode_theme": None,
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-outline-warning",
-        "danger": "btn-outline-danger",
-        "success": "btn-success"
-    },
-    "actions_sticky_top": False
-}
+
+# JAZZMIN_UI_TWEAKS = {
+#     "navbar_small_text": True,
+#     "footer_small_text": False,
+#     "body_small_text": False,
+#     "brand_small_text": True,
+#     "brand_colour": "navbar-gray",
+#     "accent": "accent-warning",
+#     "navbar": "navbar-gray navbar-dark",
+#     "no_navbar_border": False,
+#     "navbar_fixed": False,
+#     "layout_boxed": False,
+#     "footer_fixed": False,
+#     "sidebar_fixed": True,
+#     "sidebar": "sidebar-dark-warning",
+#     "sidebar_nav_small_text": True,
+#     "sidebar_disable_expand": False,
+#     "sidebar_nav_child_indent": False,
+#     "sidebar_nav_compact_style": False,
+#     "sidebar_nav_legacy_style": False,
+#     "sidebar_nav_flat_style": True,
+#     "theme": "minty",
+#     "dark_mode_theme": None,
+#     "button_classes": {
+#         "primary": "btn-outline-primary",
+#         "secondary": "btn-outline-secondary",
+#         "info": "btn-info",
+#         "warning": "btn-outline-warning",
+#         "danger": "btn-danger",
+#         "success": "btn-success"
+#     }
+# }
+
 
 AUTH_USER_MODEL = 'web_app.User'
 

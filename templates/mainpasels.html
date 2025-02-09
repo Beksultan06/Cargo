@@ -243,7 +243,19 @@
             font-family: Arial, Helvetica, sans-serif;
 
         }
-
+        .log-container {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            border-left: 5px solid #A40A5E; /* Цвет акцента */
+        }
+        
+        .log-message {
+            color: #333;
+            font-weight: bold;
+        }
+        
         .side-menu.active {
             right: 0;
         }
@@ -632,13 +644,12 @@
             </div>
         {% endif %}
  
-        {% if messages %}
-    <div class="messages">
-        {% for searched_product_message in messages %}
-            <p class="error-message">{{ searched_product_message }}</p>
-        {% endfor %}
-    </div>
-{% endif %}
+        {% if log_message %}
+        <div class="log-container">
+            <p class="log-message">{{ log_message }}</p>
+        </div>
+    {% endif %}
+    
     </div>
     
     <!-- Вкладка "Мои посылки" (заполняется через AJAX) -->
@@ -765,7 +776,7 @@
     
             // Функция для выхода
             function logout() {
-                window.location.href = "enter.html";
+                window.location.href = '{% url 'login' %}';
             }
     
             // Обработка переключения темы
