@@ -1,11 +1,11 @@
-from aiogram import types, Router
+from aiogram import types, Router, F
 from aiogram.filters import Command
 from django.conf import settings
 from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_package_options_keyboard, get_profile_buttons
 from aiogram.fsm.context import FSMContext
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
-from app.telegram.management.commands.app.states import TrackState
+from app.telegram.management.commands.app.states import CourierOrderStates, TrackState
 from app.web_app.models import Product, ProductStatus, Settings, User
 from app.telegram.management.commands.run import bot
 from django.db import transaction
@@ -200,9 +200,33 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         text += "➖➖➖➖➖➖➖➖➖➖\n"
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
 
-async def send_telegram_message(chat_id, message):
-    try:
-        await bot.send_message(chat_id, message)
-        logger.debug(f"Уведомление отправлено пользователю с chat_id {chat_id}")
-    except Exception as e:
-        logger.error(f"Ошибка при отправке сообщения в Telegram: {e}")
+async def send_telegram_message(chat_id, message, track_number):
+    keyboard = get_package_options_keyboard(track_number)
+    await bot.send_message(chat_id, message, reply_markup=keyboard)
+
+@router.callback_query(F.data.startswith('pickup_'))
+async def handle_pickup(callback_query: types.CallbackQuery):
+    track_number = callback_query.data.replace('pickup_', '')
+    await callback_query.answer(f"Вы выбрали забрать товар с трек-номером {track_number} со склада.")
+    await callback_query.message.edit_text(f"✅ Забрать товар {track_number} со склада подтверждено!")
+
+@router.callback_query(F.data.startswith('deliver_'))
+async def handle_delivery(callback_query: types.CallbackQuery, state: FSMContext):
+    track_number = callback_query.data.replace('deliver_', '')
+    await state.update_data(track_number=track_number)
+    logger.info(f"Начато оформление доставки для трека: {track_number}")
+    await callback_query.message.answer("📍 Пожалуйста, введите адрес для доставки:")
+    await state.set_state(CourierOrderStates.waiting_for_address)
+    current_state = await state.get_state()
+    logger.info(f"Текущее состояние после установки: {current_state}")
+    await callback_query.answer()
+
+@router.message(CourierOrderStates.waiting_for_address)
+async def process_address(message: types.Message, state: FSMContext):
+    address = message.text
+    await state.update_data(address=address)
+    logger.info(f"Получен адрес: {address}")
+    await message.answer("📞 Пожалуйста, введите номер телефона для доставки:")
+    await state.set_state(CourierOrderStates.waiting_for_phone)
+    current_state = await state.get_state()
+    logger.info(f"Состояние после ввода адреса: {current_state}")

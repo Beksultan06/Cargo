@@ -220,7 +220,6 @@ class Notification(models.Model):
     class Meta:
         verbose_name_plural = 'Уведомление'
 
-# Определим типы платежей
 PAYMENT_CHOICES = (
     ("MBANK", "MBANK"),
     ("Наличный", "Наличный"),
@@ -254,7 +253,8 @@ class Courier(models.Model):
     type_payment = models.CharField(
         max_length=20,
         choices=PAYMENT_CHOICES,
-        verbose_name='Тип платежа'
+        verbose_name='Тип платежа',
+        default=None
     )
     status = models.CharField(
         max_length=20,
