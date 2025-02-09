@@ -57,7 +57,6 @@ def get_whatsapp_manager_button():
     return keyboard
 
 
-
 def get_package_options_keyboard(track_number):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [

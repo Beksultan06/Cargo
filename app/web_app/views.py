@@ -5,8 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from app.telegram.management.commands.app.bot import notify_registration_success
-from app.telegram.management.commands.app.courier import send_telegram_message_cuorier
+from app.telegram.management.commands.app.bot import notify_registration_success, send_telegram_message
 from app.web_app.models import User, Pvz, Product
 from app.web_app.pagination import paginate_queryset
 from .models import ProductStatus, Settings, User, Pvz, Product, generate_code_from_pvz
@@ -276,25 +275,16 @@ def save_track(request):
                 except ValueError:
                     logger.error(f"Некорректный формат веса: {weight}")
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
-                
                 product.status = ProductStatus.IN_OFFICE
                 product.save()
                 logger.debug(f"Вес установлен, товар {track} обновлён до статуса 'В офисе'")
 
-                # Отправка уведомления через Telegram с использованием данных из модели Product
+                # Отправка уведомления через Telegram с использованием безопасного запуска асинхронной задачи
                 if product.user and product.user.chat_id:
-                    message = (
-                        f"📦 Ваш товар прибыл в офис!\n"
-                        f"🆔 Трек-номер: {product.track}\n"
-                        f"👤 Пользователь: {product.user.full_name}\n"
-                        f"🏠 Адрес: {product.user.pickup_point}\n"
-                        f"📞 Телефон: {product.user.phone_number}\n"
-                        f"⚖️ Вес: {product.weight} кг\n"
-                        f"💵 Стоимость: {product.price} $\n\n"
-                        f"Пожалуйста, заберите посылку в ближайшее время!"
-                    )
-                    async_to_sync(send_telegram_message_cuorier)(product.user.chat_id, message, product.track)
+                    message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вес: {product.weight} кг. Заберите его в удобное время."
+                    async_to_sync(send_telegram_message)(product.user.chat_id, message)
                     logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
+
 
                 return JsonResponse({
                     "success": True,
@@ -424,11 +414,11 @@ def past(request):
     return render(request, "Past.html", locals())
 
 def unknown(request):
-    settings = Settings.objects.latest("id")
+    # settings = Settings.objects.latest("id")
     query = request.GET.get('q', '')
     if query:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN, track__icontains=query)
     else:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN)
     
-    return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query, 'settings': settings})
+    return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query})
