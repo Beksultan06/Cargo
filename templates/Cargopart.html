@@ -190,11 +190,12 @@
 
         }
 
-        .side-menu .menu-logo {
-            font-size: 18px;
-            font-weight: bold;
-            color: #A40A5E;
+        .menu-logo {
+            width: 200px;
+            height: 100px;
+            margin-left: 15%;
         }
+
 
         .side-menu .close-button {
             margin-top: 37%;
@@ -208,10 +209,6 @@
         .side-menu ul {
             list-style: none;
             margin-top: 40px;
-        }
-
-        .side-menu ul .active {
-            background-color: #A40A5E;
         }
 
         .side-menu ul li {
@@ -890,7 +887,7 @@
     </div>
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <img class="menu-logo" src="{{ settings.logo.url }}" width="50px" alt="">
+            <img class="menu-logo" src="{{ settings.logo.url }}" alt="">
             <div class="close-button" onclick="toggleMenu()">×</div>
         </div>
         {% include 'menu.html' %}

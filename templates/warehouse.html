@@ -674,7 +674,7 @@
         }
 
         function logout() {
-            window.location.href = 'enter.html';
+            window.location.href = '{% url 'login' %}';
         }
 
         const resetButton = document.querySelector('.reset-button');

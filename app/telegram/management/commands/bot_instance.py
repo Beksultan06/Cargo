@@ -4,5 +4,5 @@ import os
 
 load_dotenv()
 
-bot = Bot(token='7916213675:AAHQ5CSaRXiybU-3c8ctLwD54WE_jtRwRvs')
-bot_cuorier = Bot(token='7236082605:AAF6kL2GaHvskj-cYJ9LjliGzlhNrcZuaQE')
+bot = Bot(token='7371249679:AAGRkXzHIpJHHAaDhKxULM7iP7q8LqEw2iA')
+bot_cuorier = Bot(token='7143865311:AAGLTrlaZ5Ko5AR8M3QOhSNf2vnqiZ-5-XM')
