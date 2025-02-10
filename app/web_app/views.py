@@ -275,16 +275,14 @@ def save_track(request):
                 except ValueError:
                     logger.error(f"Некорректный формат веса: {weight}")
                     return JsonResponse({"success": False, "error": "Некорректный формат веса"}, status=400)
+                
                 product.status = ProductStatus.IN_OFFICE
                 product.save()
                 logger.debug(f"Вес установлен, товар {track} обновлён до статуса 'В офисе'")
 
-                # Отправка уведомления через Telegram с использованием безопасного запуска асинхронной задачи
+                # Отправка уведомления через функцию send_telegram_message
                 if product.user and product.user.chat_id:
-                    message = f"📦 Ваш товар с трек-номером {track} прибыл в офис! Вес: {product.weight} кг. Заберите его в удобное время."
-                    async_to_sync(send_telegram_message)(product.user.chat_id, message)
-                    logger.debug(f"Уведомление отправлено пользователю {product.user.full_name} для трека {track}")
-
+                    async_to_sync(send_telegram_message)(product.user.chat_id, product)
 
                 return JsonResponse({
                     "success": True,
@@ -302,6 +300,7 @@ def save_track(request):
     except Exception as e:
         logger.error(f"Ошибка при обработке запроса: {e}")
         return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
+
 
 @login_required
 def mainpasels(request):

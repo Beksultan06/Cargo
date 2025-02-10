@@ -815,6 +815,9 @@
         .closed-eye {
             display: none;
         }
+        .visota {
+            height: 500px;
+        }
     </style>
 </head>
 <body>
@@ -870,20 +873,26 @@
                 <button type="submit" class="btn-save">Сохранить</button>
             </form>
         </div>
-        <form method="POST">
+        <form method="POST" onsubmit="return validatePasswords(event);">
             {% csrf_token %}
             <div class="input-group" id="password-section">
                 <label for="password">Пароль</label>
                 <div class="input-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Введите новый пароль">
+                    <input type="password" id="password" name="password" placeholder="Введите новый пароль" required>
                 </div>
+        
                 <label for="confirm-password">Повторите пароль</label>
                 <div class="input-wrapper">
-                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Повторите пароль">
+                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Повторите пароль" required>
                 </div>
-                <button type="submit" class="btn-save">Сохранить</button>
+        
+                <!-- Сообщение об ошибке или успехе -->
+                <div id="message" style="color: red; display: none;"></div>
+        
+                <button type="submit" class="btn-save" id="save-button" disabled>Сохранить</button>
             </div>
         </form>
+        <div class="visota"></div>
     </div>
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
@@ -1135,6 +1144,53 @@
             });
         });
 
+    </script>
+    <script>
+        const passwordField = document.getElementById('password');
+        const confirmPasswordField = document.getElementById('confirm-password');
+        const saveButton = document.getElementById('save-button');
+        const messageBox = document.getElementById('message');
+    
+        // Проверка заполнения полей для активации кнопки
+        function checkFields() {
+            if (passwordField.value.trim() !== '' && confirmPasswordField.value.trim() !== '') {
+                saveButton.disabled = false;
+            } else {
+                saveButton.disabled = true;
+            }
+        }
+    
+        passwordField.addEventListener('input', checkFields);
+        confirmPasswordField.addEventListener('input', checkFields);
+    
+        // Валидация паролей при отправке формы
+        function validatePasswords(event) {
+            event.preventDefault(); // Останавливаем стандартную отправку формы
+    
+            const password = passwordField.value.trim();
+            const confirmPassword = confirmPasswordField.value.trim();
+    
+            if (password !== confirmPassword) {
+                console.log("❌ Пароли не совпадают.");  // Лог на несоответствие
+                messageBox.textContent = "❌ Пароли не совпадают.";
+                messageBox.style.color = "red";
+                messageBox.style.display = "block";
+                return false;  // Останавливаем отправку формы
+            }
+    
+            // Если пароли совпадают
+            console.log("✅ Пароль успешно изменён.");  // Лог на успешное изменение
+            messageBox.textContent = "✅ Пароль успешно изменён!";
+            messageBox.style.color = "green";
+            messageBox.style.display = "block";
+    
+            // Здесь можно отправить форму через AJAX или разрешить отправку формы
+            setTimeout(() => {
+                event.target.submit();  // Отправляем форму через 1 секунду
+            }, 1000);
+    
+            return true;
+        }
     </script>
 </body>
 
