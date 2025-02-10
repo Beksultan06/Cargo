@@ -207,7 +207,7 @@ async def show_my_packages(message: types.Message, state: FSMContext):
 
 
 # Токен второго бота (бота курьера)
-SECOND_BOT_TOKEN = '7389351873:AAFvCARxuCwYctCWZJXF8P8YpdTMX2tQa3w'
+SECOND_BOT_TOKEN = '7143865311:AAGLTrlaZ5Ko5AR8M3QOhSNf2vnqiZ-5-XM'
 
 async def send_telegram_message(chat_id, product):
     message = (

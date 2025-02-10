@@ -21,7 +21,9 @@
             <input type="text" id="fullName" name="fullName" placeholder="ФИО (обязательно)" required>
             <label for="phone">Телефон (в международном формате)</label>
             <input type="tel" id="phone" name="phone" placeholder="+996XXXXXXXXX" required>
+            <label for="phone">Пункт выдачи заказа</label>
             <select id="pvz" name="pvz" required>
+                
                 <option value="">Выберите ПВЗ</option>
                 {% for point in pvz_list %}
                 <option value="{{ point.id }}">{{ point.city }}</option>
