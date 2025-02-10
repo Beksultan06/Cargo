@@ -44,8 +44,15 @@ class ProductAdmin(admin.ModelAdmin):
 class ManagerAdmin(admin.ModelAdmin):
     list_display = ['id', 'username', 'full_name']
 
-admin.site.register(Notification)
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['short_text']
 
+    def short_text(self, obj):
+        return (obj.text[:30] + '...') if len(obj.text) > 30 else obj.text
+
+    short_text.short_description = 'Текст'
+    
 @admin.register(Courier)
 class CourierAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'track', 'status']

@@ -127,6 +127,9 @@ class Manager(models.Model):
     class Meta:
         verbose_name = "Менеджер"
         verbose_name_plural = "Менеджеры"
+        
+def mbank_upload_path(instance, filename):
+    return 'mbank/mbank.webp'
 
 class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
@@ -140,6 +143,7 @@ class Settings(models.Model):
     prohibited_goods = RichTextField(verbose_name='запрещенные товары', blank=True, null=True)
     address_tg_bot = RichTextField(verbose_name='Адрес склада', blank=True, null=True)
     support = RichTextField(verbose_name='Поддержка', blank=True, null=True)
+    mbank = models.ImageField(upload_to=mbank_upload_path, verbose_name="Фото QR-кода от MBANK", blank=True, null=True)
 
     def __str__(self):
         return str(self.logo)
@@ -154,6 +158,7 @@ class ProductStatus(models.TextChoices):
     IN_OFFICE = "in_office", "В офисе"
     COURIER_IN_TRANSIT = "courier_in_transit", "Курьер в пути"
     DELIVERED = "delivered", "Доставлен"
+    COMPLETED = "completed", "Завершён"
     UNKNOWN = "unknown", "Неизвестный товар"
 
 class Product(models.Model):

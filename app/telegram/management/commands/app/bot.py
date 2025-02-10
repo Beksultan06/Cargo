@@ -207,7 +207,7 @@ async def show_my_packages(message: types.Message, state: FSMContext):
 
 
 # Токен второго бота (бота курьера)
-SECOND_BOT_TOKEN = '7189219473:AAG7HTiO6kfs-h4DQsmYfhZfUdZ1cAcMOiA'
+SECOND_BOT_TOKEN = '7389351873:AAFvCARxuCwYctCWZJXF8P8YpdTMX2tQa3w'
 
 async def send_telegram_message(chat_id, product):
     message = (
@@ -252,7 +252,6 @@ async def process_address(message: types.Message, state: FSMContext):
 
     await message.answer("📞 Теперь отправьте ваш номер телефона.")
     await state.set_state(DeliveryState.waiting_for_phone)
-
 @router.message(DeliveryState.waiting_for_phone)
 async def process_phone(message: types.Message, state: FSMContext):
     phone = message.text
@@ -274,30 +273,36 @@ async def process_phone(message: types.Message, state: FSMContext):
         track=product,
         address=address,
         phone=phone,
+        # price=product.price,
         type_payment="Наличный",
         status="Ожидает подтверждения курьером"
     )
 
     # Отправляем заказ курьеру
-    await send_order_to_courier_bot(courier_order.id, product.track, address, phone)
+    await send_order_to_courier_bot(courier_order.id, product.track, address, phone, product.price)
 
     await message.answer("🚚 Ваш заказ отправлен курьеру. Ожидайте подтверждения.")
     await state.clear()
 
-async def send_order_to_courier_bot(courier_order_id, track, address, phone):
+async def send_order_to_courier_bot(courier_order_id, track, address, phone, price):
     couriers = await sync_to_async(list)(CourierUser.objects.all())
     
     if not couriers:
         logger.error("❌ Нет зарегистрированных курьеров для получения заказа.")
         return
 
+    # Форматируем цену с двумя знаками после запятой
+    formatted_price = f"{price:.2f}$"
+
     message = (
         f"🚚 *Новый заказ на доставку!*\n"
         f"📦 Трек-номер: {track}\n"
         f"📍 Адрес: {address}\n"
-        f"📞 Телефон: {phone}\n\n"
+        f"📞 Телефон: {phone}\n"
+        f"💰 Сумма к оплате: *{formatted_price}*\n\n"
         f"Нажмите кнопку ниже, чтобы принять заказ."
     )
+
 
     keyboard_dict = {
         "inline_keyboard": [
