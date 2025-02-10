@@ -6,13 +6,18 @@ from aiogram.fsm.context import FSMContext
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
 from app.telegram.management.commands.app.states import TrackState
-from app.web_app.models import Product, ProductStatus, Settings, User
+from app.web_app.models import Product, ProductStatus, Settings, User, CourierUser, Courier
 from app.telegram.management.commands.run import bot
 from django.db import transaction
 from django.utils.html import strip_tags
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from bs4 import BeautifulSoup
 import logging
+from aiogram import Router, types, F
+from aiogram.fsm.state import StatesGroup, State
+import aiohttp
+from ..bot_instance import bot_cuorier
+
 
 logger = logging.getLogger(__name__)
 
@@ -200,9 +205,125 @@ async def show_my_packages(message: types.Message, state: FSMContext):
         text += "➖➖➖➖➖➖➖➖➖➖\n"
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
 
-async def send_telegram_message(chat_id, message):
+
+# Токен второго бота (бота курьера)
+SECOND_BOT_TOKEN = '7189219473:AAG7HTiO6kfs-h4DQsmYfhZfUdZ1cAcMOiA'
+
+async def send_telegram_message(chat_id, product):
+    message = (
+        f"📦 Ваш товар с трек-номером {product.track} прибыл в офис!\n"
+        f"Вес: {product.weight} кг.\n"
+        f"Выберите удобный способ получения:"
+    )
+
+    # Создание инлайн-клавиатуры
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🏢 Забрать в офисе", callback_data=f"pickup_office_{product.id}"),
+            InlineKeyboardButton(text="🚚 Доставить курьером", callback_data=f"deliver_courier_{product.id}")
+        ]
+    ])
+
     try:
-        await bot.send_message(chat_id, message)
-        logger.debug(f"Уведомление отправлено пользователю с chat_id {chat_id}")
+        await bot.send_message(chat_id, message, reply_markup=keyboard)
+        logger.debug(f"Уведомление с кнопками отправлено пользователю с chat_id {chat_id} для трека {product.track}")
     except Exception as e:
         logger.error(f"Ошибка при отправке сообщения в Telegram: {e}")
+
+# Состояния FSM для получения адреса и телефона
+class DeliveryState(StatesGroup):
+    waiting_for_address = State()
+    waiting_for_phone = State()
+
+# Обработка кнопки "Доставить курьером"
+@router.callback_query(lambda c: c.data.startswith("deliver_courier_"))
+async def handle_deliver_courier(callback_query: types.CallbackQuery, state: FSMContext):
+    product_id = int(callback_query.data.split("_")[-1])
+
+    await state.update_data(product_id=product_id)
+    await callback_query.message.answer("📍 Пожалуйста, введите адрес доставки.")
+    await state.set_state(DeliveryState.waiting_for_address)
+
+# Получение адреса
+@router.message(DeliveryState.waiting_for_address)
+async def process_address(message: types.Message, state: FSMContext):
+    address = message.text
+    await state.update_data(address=address)
+
+    await message.answer("📞 Теперь отправьте ваш номер телефона.")
+    await state.set_state(DeliveryState.waiting_for_phone)
+
+@router.message(DeliveryState.waiting_for_phone)
+async def process_phone(message: types.Message, state: FSMContext):
+    phone = message.text
+    await state.update_data(phone=phone)
+
+    data = await state.get_data()
+    product_id = data.get("product_id")
+    address = data.get("address")
+
+    # Получаем продукт с привязанным пользователем
+    product = await sync_to_async(Product.objects.select_related('user').get)(id=product_id)
+
+    # Получаем пользователя через sync_to_async
+    user = await sync_to_async(lambda: product.user)()
+
+    # Сохраняем заказ в модель Courier
+    courier_order = await sync_to_async(Courier.objects.create)(
+        user=user,
+        track=product,
+        address=address,
+        phone=phone,
+        type_payment="Наличный",
+        status="Ожидает подтверждения курьером"
+    )
+
+    # Отправляем заказ курьеру
+    await send_order_to_courier_bot(courier_order.id, product.track, address, phone)
+
+    await message.answer("🚚 Ваш заказ отправлен курьеру. Ожидайте подтверждения.")
+    await state.clear()
+
+async def send_order_to_courier_bot(courier_order_id, track, address, phone):
+    couriers = await sync_to_async(list)(CourierUser.objects.all())
+    
+    if not couriers:
+        logger.error("❌ Нет зарегистрированных курьеров для получения заказа.")
+        return
+
+    message = (
+        f"🚚 *Новый заказ на доставку!*\n"
+        f"📦 Трек-номер: {track}\n"
+        f"📍 Адрес: {address}\n"
+        f"📞 Телефон: {phone}\n\n"
+        f"Нажмите кнопку ниже, чтобы принять заказ."
+    )
+
+    keyboard_dict = {
+        "inline_keyboard": [
+            [
+                {"text": "✅ Принять заказ", "callback_data": f"accept_order_{courier_order_id}"},
+                {"text": "❌ Отклонить заказ", "callback_data": f"reject_order_{courier_order_id}"}
+            ]
+        ]
+    }
+
+    async with aiohttp.ClientSession() as session:
+        for courier in couriers:
+            payload = {
+                "chat_id": courier.chat_id,
+                "text": message,
+                "parse_mode": "Markdown",
+                "reply_markup": keyboard_dict
+            }
+            url = f"https://api.telegram.org/bot{SECOND_BOT_TOKEN}/sendMessage"
+
+            try:
+                async with session.post(url, json=payload) as response:
+                    if response.status == 200:
+                        logger.info(f"✅ Заказ успешно отправлен курьеру {courier.full_name or courier.username}.")
+                    else:
+                        error_response = await response.text()
+                        logger.error(f"❌ Ошибка при отправке заказа курьеру {courier.full_name or courier.username}: {response.status} - {error_response}")
+            except Exception as e:
+                logger.error(f"❌ Ошибка при подключении к Telegram API для курьера {courier.chat_id}: {e}")

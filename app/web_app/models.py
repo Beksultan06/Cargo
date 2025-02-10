@@ -277,6 +277,17 @@ class Courier(models.Model):
         return f"Курьер для {self.track.track if self.track else 'Неизвестный трек'} - Статус: {self.status}"
 
     class Meta:
-        verbose_name = "Курьер"
-        verbose_name_plural = "Курьеры"
+        verbose_name = "Заказ"
+        verbose_name_plural = "Заказы"
         ordering = ['-created_at']
+        
+        
+        
+class CourierUser(models.Model):
+    chat_id = models.CharField(max_length=20, unique=True)
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    username = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name or self.username or self.chat_id}"

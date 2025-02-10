@@ -1,29 +1,54 @@
 from aiogram import Router, types
 from aiogram.filters import Command
-from app.web_app.models import Settings
-from django.utils.html import strip_tags
-from app.telegram.management.commands.app.button import get_profile_courier
+from app.web_app.models import CourierUser, Product, Courier
+from django.db import IntegrityError
+from asgiref.sync import sync_to_async  # Импортируем sync_to_async для работы с Django ORM в async
 
 router = Router()
 
-@router.message(Command('start'))
-async def start(message:types.Message):
-    await message.answer("Привет это телеграмм бот дла курьеров!", reply_markup=get_profile_courier())
+# Команда /start для регистрации курьера
+@router.message(Command("start"))
+async def start_command(message: types.Message):
+    chat_id = message.chat.id
+    full_name = message.from_user.full_name
+    username = message.from_user.username
 
-@router.message(lambda message: message.text == "📕 Инструкция")
-async def send_instruction(message: types.Message):
-    settings = await Settings.objects.afirst()
-    text = strip_tags(settings.instructions) if settings and settings.instructions else "⚠️ Информация отсутствует."
-    await message.answer(text, parse_mode="Markdown")
+    # Сохраняем данные курьера в базе данных с использованием sync_to_async
+    try:
+        await sync_to_async(CourierUser.objects.get_or_create)(
+            chat_id=chat_id,
+            defaults={
+                'full_name': full_name,
+                'username': username
+            }
+        )
+        await message.answer("👋 Привет! Вы зарегистрированы как курьер и будете получать заказы.")
+    except IntegrityError:
+        await message.answer("✅ Вы уже зарегистрированы как курьер.")
+        
+@router.callback_query(lambda c: c.data.startswith("accept_order_"))
+async def accept_order(callback_query: types.CallbackQuery):
+    courier_order_id = int(callback_query.data.split("_")[-1])
 
-@router.message(lambda message: message.text == "⚙️ Поддержка")
-async def send_about_info(message: types.Message):
-    settings = await Settings.objects.afirst()
-    text = strip_tags(settings.support) if settings and settings.support else "⚠️ Информация отсутствует."
-    await message.answer(text, parse_mode="Markdown")
+    # Получаем заказ из модели Courier
+    courier_order = await sync_to_async(Courier.objects.get)(id=courier_order_id)
 
-@router.message(lambda message: message.text == "ℹ️ О нас")
-async def send_about_info(message: types.Message):
-    settings = await Settings.objects.afirst()
-    text = strip_tags(settings.about) if settings and settings.about else "⚠️ Информация отсутствует."
-    await message.answer(text, parse_mode="Markdown")
+    # Обновляем статус заказа
+    courier_order.status = "Принят курьером"
+    await sync_to_async(courier_order.save)()
+
+    await callback_query.answer("✅ Заказ принят и добавлен в систему.")
+    await callback_query.message.edit_text(f"🚚 Заказ с трек-номером {courier_order.track.track} принят для доставки.")
+
+
+@router.callback_query(lambda c: c.data.startswith("reject_order_"))
+async def reject_order(callback_query: types.CallbackQuery):
+    courier_order_id = int(callback_query.data.split("_")[-1])
+
+    # Обновление статуса заказа на "Отклонён"
+    courier_order = await sync_to_async(Courier.objects.get)(id=courier_order_id)
+    courier_order.status = "Отклонён курьером"
+    await sync_to_async(courier_order.save)()
+
+    await callback_query.answer("❌ Заказ отклонён.")
+    await callback_query.message.edit_text(f"⚠️ Заказ с трек-номером {courier_order.track.track} отклонён.")
