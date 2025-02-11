@@ -127,7 +127,7 @@ class Manager(models.Model):
     class Meta:
         verbose_name = "Менеджер"
         verbose_name_plural = "Менеджеры"
-        
+
 def mbank_upload_path(instance, filename):
     return 'mbank/mbank.webp'
 

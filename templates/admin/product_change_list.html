@@ -1,0 +1,49 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+<div class="object-tools" style="
+    display: flex; 
+    justify-content: flex-end; 
+    margin-bottom: 15px;
+    animation: fadeInRight 0.8s ease-out;
+">
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li style="display: inline-block; margin-left: 10px;">
+            <a href="{% url 'admin:monthly-report' %}" class="addlink" style="
+                   display: inline-flex; 
+                   align-items: center; 
+                   padding: 12px 25px; 
+                   border-radius: 10px; 
+                   background: linear-gradient(135deg, #4CAF50, #388E3C); 
+                   color: white; 
+                   font-weight: bold; 
+                   font-size: 1.2rem;
+                   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+                   text-decoration: none; 
+                   transition: all 0.3s ease;
+                   border: 2px solid transparent;
+               "
+                onmouseover="this.style.background='linear-gradient(135deg, #388E3C, #2E7D32)'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 15px rgba(0, 0, 0, 0.2)'; this.style.border='2px solid #2E7D32';"
+                onmouseout="this.style.background='linear-gradient(135deg, #4CAF50, #388E3C)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 10px rgba(0, 0, 0, 0.15)'; this.style.border='2px solid transparent';">
+                <span style="margin-right: 10px; font-size: 1.5rem;">📊</span>
+                Месячный отчет
+            </a>
+        </li>
+    </ul>
+</div>
+{{ block.super }}
+
+<style>
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock %}
