@@ -31,20 +31,26 @@ async def start(message: types.Message):
     logging.info(f"Получен chat_id: {chat_id} от пользователя {username}")
 
     try:
+        # Проверка наличия пользователя в базе данных
         user = await get_user_by_chat_id(chat_id)
+        
         if user:
+            # Обновляем chat_id, если он изменился, и показываем главное меню
             await update_chat_id(user, chat_id)
             await message.answer(
                 f"✅ Привет, {user.full_name}!\nДобро пожаловать!",
                 reply_markup=get_main_menu()
             )
-            return
-        registration_link = f'{settings.SITE_BASE_URL}/?chat_id={chat_id}'
-        logging.info(f"Отправляем ссылку регистрации: {registration_link}")
-        await message.answer(
-            "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
-            reply_markup=get_inline_keyboard(registration=True, chat_id=chat_id)
-        )
+        else:
+            # Если пользователь не найден, отправляем кнопку для регистрации
+            registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
+            logging.info(f"Отправляем ссылку регистрации: {registration_link}")
+            
+            await message.answer(
+                "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
+                reply_markup=await get_inline_keyboard(chat_id=chat_id)
+            )
+
     except Exception as e:
         logging.error(f"Ошибка при обработке пользователя: {e}")
         await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
@@ -62,10 +68,14 @@ async def notify_registration_success(chat_id, full_name):
 @router.message(lambda message: message.text == "🧑‍💼 Профиль")
 async def send_profile_info(message: types.Message):
     chat_id = message.chat.id
+    logging.info(f"Обработка профиля для chat_id: {chat_id}")
     user = await get_user_by_chat_id(chat_id)
+
     if not user:
+        logging.warning(f"Пользователь с chat_id {chat_id} не найден.")
         await message.answer("⚠️ Ваш профиль не найден. Пожалуйста, зарегистрируйтесь.")
         return
+
     pickup_point_name = user.pickup_point.city if user.pickup_point else "Не указан"
     text = (
         "📜 *Ваш профиль 📜*\n\n"
@@ -74,12 +84,13 @@ async def send_profile_info(message: types.Message):
         f"📞 *Номер*: `{user.phone_number}`\n"
         f"🏡 *Адрес*: {user.address}\n\n"
         f"📍 *ПВЗ*: {pickup_point_name}\n"
-        f"📍 *ПВЗ телефон*:  [996505180600](tel:996558486448)\n"
+        f"📍 *ПВЗ телефон*: [996505180600](tel:996558486448)\n"
         "📍 *Часы работы*: \n"
         "📍 *Локация на Карте*: \n\n"
         "[🌍 LiderCargo (WhatsApp)](https://www.youtube.com/)"
     )
-    await message.answer(text, parse_mode="Markdown", reply_markup=get_profile_buttons(chat_id))
+    await message.answer(text, parse_mode="Markdown", reply_markup=await get_profile_buttons(chat_id))
+
 
 @router.message(lambda message: message.text == "🚫 Запрещенные товары")
 async def forbidden_goods(message: types.Message):

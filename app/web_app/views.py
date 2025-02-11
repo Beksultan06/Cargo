@@ -20,20 +20,21 @@ from asgiref.sync import async_to_sync
 logger = logging.getLogger(__name__)
 
 from django.core.exceptions import ObjectDoesNotExist
-
 def register(request):
     try:
-        settings = Settings.objects.latest('id')
+        settings_obj = Settings.objects.latest('id')
     except ObjectDoesNotExist:
-        settings = None  # Если нет записей в Settings
-        logging.warning("Настройки не найдены. Проверьте таблицу Settings.")
+        settings_obj = None
+        logger.warning("Настройки не найдены. Проверьте таблицу Settings.")
 
     chat_id = request.GET.get('chat_id') or request.POST.get('chat_id')
-    logging.info(f"Полученный chat_id в register: {chat_id}")
+    logger.info(f"Полученный chat_id в register: {chat_id}")
 
     if chat_id:
         user = User.objects.filter(chat_id=chat_id).first()
         if user:
+            logger.info(f"Пользователь с chat_id {chat_id} уже зарегистрирован. Перенаправление в личный кабинет.")
+            login(request, user)
             return redirect('cargopart')
 
     if request.method == 'POST':
@@ -45,32 +46,36 @@ def register(request):
         confirm_password = request.POST.get('confirmPassword', '').strip()
 
         if not all([full_name, phone, pvz_id, address, password, confirm_password]):
+            logger.warning("Не все поля заполнены.")
             return render(request, 'index.html', {
                 'pvz_list': Pvz.objects.all(),
-                'settings': settings,
+                'settings': settings_obj,
                 'error_message': '❌ Все поля обязательны для заполнения.'
             })
 
         if password != confirm_password:
+            logger.warning("Пароли не совпадают.")
             return render(request, 'index.html', {
                 'pvz_list': Pvz.objects.all(),
-                'settings': settings,
+                'settings': settings_obj,
                 'error_message': '❌ Пароли не совпадают.'
             })
 
         try:
             pvz = Pvz.objects.get(id=pvz_id)
         except Pvz.DoesNotExist:
+            logger.error(f"ПВЗ с id {pvz_id} не найден.")
             return render(request, 'index.html', {
                 'pvz_list': Pvz.objects.all(),
-                'settings': settings,
+                'settings': settings_obj,
                 'error_message': '❌ Выбранный ПВЗ не существует.'
             })
 
         if User.objects.filter(phone_number=phone).exists():
+            logger.warning(f"Пользователь с номером {phone} уже зарегистрирован.")
             return render(request, 'index.html', {
                 'pvz_list': Pvz.objects.all(),
-                'settings': settings,
+                'settings': settings_obj,
                 'error_message': '❌ Пользователь с таким номером телефона уже зарегистрирован.'
             })
 
@@ -84,25 +89,25 @@ def register(request):
                 password=make_password(password),
                 chat_id=chat_id
             )
-            logging.info(f"Создан новый пользователь {new_user.username} с chat_id: {new_user.chat_id}")
-            user = authenticate(request, username=phone, password=password)
+            logger.info(f"Создан новый пользователь {new_user.username} с chat_id: {new_user.chat_id}")
 
+            user = authenticate(request, username=phone, password=password)
             if user:
                 login(request, user)
                 async_to_sync(notify_registration_success)(chat_id, full_name)
                 return redirect('cargopart')
 
         except Exception as e:
-            logging.error(f"Ошибка при регистрации: {e}")
+            logger.error(f"Ошибка при регистрации: {e}")
             return render(request, 'index.html', {
                 'pvz_list': Pvz.objects.all(),
-                'settings': settings,
+                'settings': settings_obj,
                 'error_message': f'❌ Ошибка при регистрации: {e}'
             })
 
     return render(request, 'index.html', {
         'pvz_list': Pvz.objects.all(),
-        'settings': settings
+        'settings': settings_obj
     })
 
 
@@ -122,22 +127,40 @@ def login_view(request):
     csrf_token = get_token(request)
     return render(request, "enter.html", {"csrf_token": csrf_token})
 
-@login_required(login_url='/')
 def cargopart(request):
-    user = request.user
+    # Попытка авто-входа через chat_id и auto_login
+    chat_id = request.GET.get('chat_id')
+    auto_login = request.GET.get('auto_login', 'false').lower() == 'true'
+    
+    logger.info(f"Полученный chat_id: {chat_id}, auto_login: {auto_login}")
+
+    if chat_id and auto_login:
+        user = User.objects.filter(chat_id=chat_id).first()
+        if user:
+            login(request, user)
+            logger.info(f"Пользователь {user.full_name} автоматически вошел в систему.")
+            return redirect('/cargopart/')  # Перенаправление на страницу после успешного входа
+        else:
+            logger.warning(f"Пользователь с chat_id {chat_id} не найден.")
+            return redirect('/')  # Перенаправление на главную, если пользователь не найден
+
+    # Если пользователь уже аутентифицирован
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        # Если нет параметров для авто-входа и пользователь не аутентифицирован
+        return redirect('/')
 
     if request.method == "POST":
-        print("📩 Форма отправлена!")
-        print("📨 request.POST:", request.POST)
-
+        # Обработка формы обновления данных
         full_name = request.POST.get("full_name", "").strip()
         phone_number = request.POST.get("phone_number", "").strip()
         pvz_id = request.POST.get("pickup_point", "").strip()
         warehouse_address = request.POST.get("warehouse_address", "").strip()
         password = request.POST.get("password", "").strip()
         confirm_password = request.POST.get("confirm-password", "").strip()
-        logger.info(f"POST data: password={password}, confirm_password={confirm_password}")
 
+        # Проверка выбранного ПВЗ
         pvz = None
         if pvz_id:
             try:
@@ -146,27 +169,24 @@ def cargopart(request):
                 messages.error(request, "❌ Выбранный ПВЗ не существует.")
                 return redirect("cargopart")
 
+        # Обновление данных пользователя
         user.full_name = full_name
         user.phone_number = phone_number
         user.pickup_point = pvz
         user.warehouse_address = warehouse_address
-        user.id_user = generate_code_from_pvz(user)
 
         if password:
             if password == confirm_password:
                 if len(password) < 6:
                     messages.error(request, "❌ Пароль должен содержать минимум 6 символов!")
                     return redirect("cargopart")
-                print("✅ Пароль изменен!")
                 user.set_password(password)
                 user.save()
                 update_session_auth_hash(request, user)
                 messages.success(request, "✅ Пароль успешно изменен!")
-                logger.info("Пароль успешно обновлен!")
                 return redirect("cargopart")
             else:
                 messages.error(request, "❌ Пароли не совпадают!")
-                logger.warning("Ошибка: пароли не совпадают!")
                 return redirect("cargopart")
 
         user.save()
@@ -174,7 +194,6 @@ def cargopart(request):
         return redirect("cargopart")
 
     settings = Settings.objects.first()
-
     user_data = {
         "full_name": user.full_name,
         "phone_number": user.phone_number,
@@ -182,7 +201,9 @@ def cargopart(request):
         "warehouse_address": user.warehouse_address or "",
         "pvz_list": Pvz.objects.all(),
         "id_user": user.id_user,
+        "settings":settings
     }
+    
     return render(request, "Cargopart.html", {
         "user_data": user_data,
         "user": user,
@@ -302,7 +323,7 @@ def save_track(request):
         return JsonResponse({"success": False, "error": f"Ошибка: {e}"}, status=500)
 
 
-@login_required
+
 def mainpasels(request):
     settings = Settings.objects.latest("id")
     """Главная страница с посылками пользователя"""
@@ -331,7 +352,7 @@ def mainpasels(request):
     })
 
 
-@method_decorator(login_required, name='dispatch')
+# @method_decorator(name='dispatch')
 class ParcelView(View):
     def dispatch(self, request, *args, **kwargs):
         self.settings = Settings.objects.latest("id")  # Загружаем настройки перед каждым запросом
@@ -413,11 +434,11 @@ def past(request):
     return render(request, "Past.html", locals())
 
 def unknown(request):
-    # settings = Settings.objects.latest("id")
+    settings = Settings.objects.latest("id")
     query = request.GET.get('q', '')
     if query:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN, track__icontains=query)
     else:
         unknown_products = Product.objects.filter(status=ProductStatus.UNKNOWN)
     
-    return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query})
+    return render(request, 'Unknown.html', {'unknown_products': unknown_products, 'query': query, 'settings': settings})

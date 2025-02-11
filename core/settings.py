@@ -69,7 +69,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "app.web_app.auth_backends.PhoneBackend",
+    # "app.web_app.auth_backends.PhoneBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 

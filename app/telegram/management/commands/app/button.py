@@ -1,19 +1,36 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 from django.conf import settings
+from asgiref.sync import sync_to_async
+from app.web_app.models import User
 
-def get_inline_keyboard(registration=False, chat_id=None):
+async def get_inline_keyboard(chat_id=None):
     buttons = [
         [InlineKeyboardButton(text="💬 Написать менеджеру", url="https://www.youtube.com/")]
     ]
-    if registration and chat_id:
-        registration_url = f"{settings.SITE_BASE_URL}/?chat_id={chat_id}"
-        buttons.append([
-            InlineKeyboardButton(
-                text='📝 Пройти регистрацию',
-                web_app=WebAppInfo(url=registration_url)
-            )
-        ])
+
+    if chat_id:
+        user_exists = await sync_to_async(User.objects.filter(chat_id=chat_id).exists)()
+        if user_exists:
+            # Пользователь найден, генерируем ссылку для автоавторизации
+            login_url = f"{settings.SITE_BASE_URL}/cargopart/?chat_id={chat_id}&auto_login=true"
+            buttons.append([
+                InlineKeyboardButton(
+                    text='🔑 Войти в личный кабинет',
+                    web_app=WebAppInfo(url=login_url)
+                )
+            ])
+        else:
+            # Пользователь не найден, предлагаем регистрацию
+            registration_url = f"{settings.SITE_BASE_URL}/register/?chat_id={chat_id}"
+            buttons.append([
+                InlineKeyboardButton(
+                    text='📝 Пройти регистрацию',
+                    web_app=WebAppInfo(url=registration_url)
+                )
+            ])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 
 def get_main_menu():
     keyboard = ReplyKeyboardMarkup(
@@ -26,18 +43,28 @@ def get_main_menu():
     )
     return keyboard
 
-def get_profile_buttons(chat_id):
+async def get_profile_buttons(chat_id):
+    user_exists = await sync_to_async(User.objects.filter(chat_id=chat_id).exists)()
+    
+    if user_exists:
+        login_url = f"{settings.SITE_BASE_URL}/cargopart/?chat_id={chat_id}&auto_login=true"
+        button_text = "🔑 Войти в личный кабинет"
+    else:
+        login_url = f"{settings.SITE_BASE_URL}/?chat_id={chat_id}"
+        button_text = "📝 Пройти регистрацию"
+
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔑 Войти в личный кабинет",
-                    web_app=WebAppInfo(url=f"{settings.SITE_BASE_URL}/cargopart/?chat_id={chat_id}")
+                    text=button_text,
+                    web_app=WebAppInfo(url=login_url)
                 )
             ]
         ]
     )
     return keyboard
+
 
 def get_support_buttons():
     keyboard = InlineKeyboardMarkup(
