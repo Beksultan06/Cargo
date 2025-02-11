@@ -133,8 +133,8 @@ def mbank_upload_path(instance, filename):
 
 class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
-    address = models.CharField(max_length=100, verbose_name="Адрес")
-    phone = models.CharField(max_length=50, verbose_name="Номер телефона", help_text="Тут нужен рабочий номер склада в Китае")
+    address = models.CharField(max_length=100, verbose_name="Адрес склада в китае")
+    phone = models.CharField(max_length=50, verbose_name="Номер телефона склада в Китае", help_text="Тут нужен рабочий номер склада в Китае")
     price = models.FloatField(verbose_name='Цена за кг')
     ista = models.URLField(verbose_name='Инстаграмм', blank=True, null=True)
     watapp = models.URLField(verbose_name='Ватсап', blank=True, null=True)
@@ -289,10 +289,14 @@ class Courier(models.Model):
         
         
 class CourierUser(models.Model):
-    chat_id = models.CharField(max_length=20, unique=True)
-    full_name = models.CharField(max_length=255, blank=True, null=True)
-    username = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    chat_id = models.CharField(max_length=20, unique=True, verbose_name="CHAT-ID")
+    full_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="ФИО")
+    username = models.CharField(max_length=255, blank=True, null=True,)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
     def __str__(self):
         return f"{self.full_name or self.username or self.chat_id}"
+    
+    class Meta:
+        verbose_name = "Курьер"
+        verbose_name_plural = "Курьеры"

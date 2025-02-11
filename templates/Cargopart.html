@@ -839,7 +839,7 @@
                 <p id="warehouse-address">
                     阿{{ user_data.id_user }}
                     {{ settings.phone }}
-                    广东省佛山市南海区大沥镇黄岐北村公路名雅花园后门中俄物流仓{{ user_data.id_user }}
+                    {{settings.address}}{{ user_data.id_user }}
                 </p>
             </address>
             <button onclick="copyToClipboard()">
@@ -868,8 +868,8 @@
                     {% endif %}
                     {% endfor %}
                 </select>
-                <label for="warehouse">Адрес склада</label>
-                <input type="text" id="warehouse" name="warehouse_address" value="{{ user_data.warehouse_address }}">
+                <label for="warehouse">Мой адрес</label>
+                <input type="text" id="warehouse" name="warehouse_address" value="{{ user_data.address }}">
                 <button type="submit" class="btn-save">Сохранить</button>
             </form>
         </div>

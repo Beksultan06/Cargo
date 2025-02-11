@@ -104,6 +104,7 @@ def register(request):
 
 
 def login_view(request):
+    settings = Settings.objects.latest('id')
     if request.method == "POST":
         phone_number = request.POST.get("phone", "").strip().replace(" ", "").replace("-", "")
         password = request.POST.get("password", "").strip()
@@ -117,7 +118,7 @@ def login_view(request):
         else:
             return JsonResponse({"status": "error", "message": "Неверный номер телефона или пароль"}, status=400)
     csrf_token = get_token(request)
-    return render(request, "enter.html", {"csrf_token": csrf_token})
+    return render(request, "enter.html", {"csrf_token": csrf_token, "settings": settings})
 
 def cargopart(request):
     # Попытка авто-входа через chat_id и auto_login
@@ -145,7 +146,7 @@ def cargopart(request):
         full_name = request.POST.get("full_name", "").strip()
         phone_number = request.POST.get("phone_number", "").strip()
         pvz_id = request.POST.get("pickup_point", "").strip()
-        warehouse_address = request.POST.get("warehouse_address", "").strip()
+        address = request.POST.get("address", "").strip()
         password = request.POST.get("password", "").strip()
         confirm_password = request.POST.get("confirm-password", "").strip()
 
@@ -162,7 +163,7 @@ def cargopart(request):
         user.full_name = full_name
         user.phone_number = phone_number
         user.pickup_point = pvz
-        user.warehouse_address = warehouse_address
+        user.address = address
 
         if password:
             if password == confirm_password:
@@ -187,7 +188,7 @@ def cargopart(request):
         "full_name": user.full_name,
         "phone_number": user.phone_number,
         "pickup_point": user.pickup_point.id if user.pickup_point else None,
-        "warehouse_address": user.warehouse_address or "",
+        "address": user.address or "",
         "pvz_list": Pvz.objects.all(),
         "id_user": user.id_user,
         "settings":settings
