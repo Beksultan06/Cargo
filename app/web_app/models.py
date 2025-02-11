@@ -144,6 +144,7 @@ class Settings(models.Model):
     address_tg_bot = RichTextField(verbose_name='Адрес склада', blank=True, null=True)
     support = RichTextField(verbose_name='Поддержка', blank=True, null=True)
     mbank = models.ImageField(upload_to=mbank_upload_path, verbose_name="Фото QR-кода от MBANK", blank=True, null=True)
+    date = models.CharField(max_length=155, verbose_name='Часы работы')
 
     def __str__(self):
         return str(self.logo)
