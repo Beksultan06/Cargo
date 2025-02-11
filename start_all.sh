@@ -1,6 +1,6 @@
-#!/bin/bash
+!/bin/bash
 
-# Активируем виртуальное окружение
+Активируем виртуальное окружение
 source /home/cargo/venv/bin/activate
 
 # Запуск Uvicorn в фоне
