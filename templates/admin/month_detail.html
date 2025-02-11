@@ -180,7 +180,7 @@
 
 <h3>Итоговая сумма: {{ total_sum|floatformat:2 }} сом</h3>
 
-<a href="{% url 'admin:export-month-report' year month %}" class="export-link">📥 Скачать отчет за месяц (Excel)</a>
+<a href="{% url 'admin:export-month-report' year month %}" class="export-link" style="color: white;">📥 Скачать отчет за месяц (Excel)</a>
 
-<a class="back-link" href="{% url 'admin:monthly-report' %}">← Назад к месяцам</a>
+<a class="back-link" href="{% url 'admin:monthly-report' %}" style="color: white;">← Назад к месяцам</a>
 {% endblock %}

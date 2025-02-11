@@ -177,8 +177,8 @@
 
 <h3>Сумма за день: {{ total_sum|floatformat:2 }} сом</h3>
 
-<a href="{% url 'admin:export-day-report' date.year date.month date.day %}" class="export-link">📥 Скачать отчет за день
+<a href="{% url 'admin:export-day-report' date.year date.month date.day %}" class="export-link" style="color: white;">📥 Скачать отчет за день
     (Excel)</a>
 
-<a class="back-link" href="{% url 'admin:month-detail' date.year date.month %}">← Назад к неделям</a>
+<a class="back-link" href="{% url 'admin:month-detail' date.year date.month %}" style="color: white;">← Назад к неделям</a>
 {% endblock %}
