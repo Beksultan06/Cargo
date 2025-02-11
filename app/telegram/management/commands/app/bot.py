@@ -237,10 +237,8 @@ async def send_telegram_message(chat_id, product):
 
     try:
         await bot.send_message(chat_id, message, reply_markup=keyboard)
-        logger.debug(f"Уведомление с кнопками отправлено пользователю с chat_id {chat_id} для трека {product.track}")
     except Exception as e:
-        logger.error(f"Ошибка при отправке сообщения в Telegram: {e}")
-
+        pass
 # Состояния FSM для получения адреса и телефона
 class DeliveryState(StatesGroup):
     waiting_for_address = State()
@@ -299,7 +297,6 @@ async def send_order_to_courier_bot(courier_order_id, track, address, phone, pri
     couriers = await sync_to_async(list)(CourierUser.objects.all())
     
     if not couriers:
-        logger.error("❌ Нет зарегистрированных курьеров для получения заказа.")
         return
 
     # Форматируем цену с двумя знаками после запятой
@@ -337,9 +334,8 @@ async def send_order_to_courier_bot(courier_order_id, track, address, phone, pri
             try:
                 async with session.post(url, json=payload) as response:
                     if response.status == 200:
-                        logger.info(f"✅ Заказ успешно отправлен курьеру {courier.full_name or courier.username}.")
+                        pass
                     else:
                         error_response = await response.text()
-                        logger.error(f"❌ Ошибка при отправке заказа курьеру {courier.full_name or courier.username}: {response.status} - {error_response}")
             except Exception as e:
-                logger.error(f"❌ Ошибка при подключении к Telegram API для курьера {courier.chat_id}: {e}")
+                pass
