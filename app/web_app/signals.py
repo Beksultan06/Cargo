@@ -16,3 +16,4 @@ def send_notification_to_users(sender, instance, created, **kwargs):
                 async_to_sync(bot.send_message)(user.chat_id, f"📢 Новое уведомление от админа:\n\n{instance.text}")
             except Exception as e:
                 pass
+

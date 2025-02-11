@@ -12,39 +12,64 @@ from django.db import transaction
 from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from bs4 import BeautifulSoup
-import logging
 from aiogram import Router, types, F
 from aiogram.fsm.state import StatesGroup, State
 import aiohttp
-from ..bot_instance import bot_cuorier
+from aiogram.enums import ParseMode
 
-
-logger = logging.getLogger(__name__)
 
 router = Router()
 
+class BroadcastState(StatesGroup):
+    waiting_for_message = State()
+
+async def send_broadcast_message(message_text: str):
+    users = await sync_to_async(list)(User.objects.filter(chat_id__isnull=False)) 
+    for user in users:
+        try:
+            await bot.send_message(user.chat_id, message_text, parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            pass
+        
+@router.message(Command("broadcast"))
+async def start_broadcast(message: types.Message, state: FSMContext):
+    user = await sync_to_async(User.objects.filter(chat_id=message.chat.id).first)() 
+
+    if user and user.is_staff:
+        await message.answer("📝 Пожалуйста, введите текст сообщения для рассылки:")
+        await state.set_state(BroadcastState.waiting_for_message)
+    else:
+        await message.answer("❌ У вас нет прав для выполнения этой команды.")
+
+@router.message(BroadcastState.waiting_for_message)
+async def process_broadcast_message(message: types.Message, state: FSMContext):
+    """
+    Получение текста рассылки и отправка его всем пользователям.
+    """
+    message_text = message.text.strip()
+
+    if not message_text:
+        await message.answer("❌ Текст сообщения не может быть пустым. Пожалуйста, введите текст.")
+        return
+
+    await send_broadcast_message(message_text)
+    await message.answer("✅ Рассылка успешно отправлена всем пользователям.")
+    await state.clear()
+        
 @router.message(Command("start"))
 async def start(message: types.Message):
     chat_id = message.chat.id
-    username = message.from_user.username
-    full_name = message.from_user.full_name or "Неизвестно"
-    logging.info(f"Получен chat_id: {chat_id} от пользователя {username}")
-
     try:
-        # Проверка наличия пользователя в базе данных
         user = await get_user_by_chat_id(chat_id)
         
         if user:
-            # Обновляем chat_id, если он изменился, и показываем главное меню
             await update_chat_id(user, chat_id)
             await message.answer(
                 f"✅ Привет, {user.full_name}!\nДобро пожаловать!",
                 reply_markup=get_main_menu()
             )
         else:
-            # Если пользователь не найден, отправляем кнопку для регистрации
             registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
-            logging.info(f"Отправляем ссылку регистрации: {registration_link}")
             
             await message.answer(
                 "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
@@ -52,7 +77,6 @@ async def start(message: types.Message):
             )
 
     except Exception as e:
-        logging.error(f"Ошибка при обработке пользователя: {e}")
         await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
 
 async def notify_registration_success(chat_id, full_name):
@@ -63,16 +87,14 @@ async def notify_registration_success(chat_id, full_name):
             reply_markup=get_main_menu()
         )
     except Exception as e:
-        logging.error(f"Ошибка при отправке сообщения о регистрации: {e}")
+        pass
 
 @router.message(lambda message: message.text == "🧑‍💼 Профиль")
 async def send_profile_info(message: types.Message):
     chat_id = message.chat.id
-    logging.info(f"Обработка профиля для chat_id: {chat_id}")
     user = await get_user_by_chat_id(chat_id)
 
     if not user:
-        logging.warning(f"Пользователь с chat_id {chat_id} не найден.")
         await message.answer("⚠️ Ваш профиль не найден. Пожалуйста, зарегистрируйтесь.")
         return
 
@@ -217,7 +239,6 @@ async def show_my_packages(message: types.Message, state: FSMContext):
     await message.answer(text, reply_markup=get_main_menu(), parse_mode="Markdown")
 
 
-# Токен второго бота (бота курьера)
 SECOND_BOT_TOKEN = '7143865311:AAGLTrlaZ5Ko5AR8M3QOhSNf2vnqiZ-5-XM'
 
 async def send_telegram_message(chat_id, product):
@@ -239,12 +260,11 @@ async def send_telegram_message(chat_id, product):
         await bot.send_message(chat_id, message, reply_markup=keyboard)
     except Exception as e:
         pass
-# Состояния FSM для получения адреса и телефона
+
 class DeliveryState(StatesGroup):
     waiting_for_address = State()
     waiting_for_phone = State()
 
-# Обработка кнопки "Доставить курьером"
 @router.callback_query(lambda c: c.data.startswith("deliver_courier_"))
 async def handle_deliver_courier(callback_query: types.CallbackQuery, state: FSMContext):
     product_id = int(callback_query.data.split("_")[-1])
@@ -253,7 +273,6 @@ async def handle_deliver_courier(callback_query: types.CallbackQuery, state: FSM
     await callback_query.message.answer("📍 Пожалуйста, введите адрес доставки.")
     await state.set_state(DeliveryState.waiting_for_address)
 
-# Получение адреса
 @router.message(DeliveryState.waiting_for_address)
 async def process_address(message: types.Message, state: FSMContext):
     address = message.text
@@ -261,6 +280,7 @@ async def process_address(message: types.Message, state: FSMContext):
 
     await message.answer("📞 Теперь отправьте ваш номер телефона.")
     await state.set_state(DeliveryState.waiting_for_phone)
+    
 @router.message(DeliveryState.waiting_for_phone)
 async def process_phone(message: types.Message, state: FSMContext):
     phone = message.text
@@ -269,14 +289,12 @@ async def process_phone(message: types.Message, state: FSMContext):
     data = await state.get_data()
     product_id = data.get("product_id")
     address = data.get("address")
-
-    # Получаем продукт с привязанным пользователем
+    
     product = await sync_to_async(Product.objects.select_related('user').get)(id=product_id)
 
-    # Получаем пользователя через sync_to_async
+
     user = await sync_to_async(lambda: product.user)()
 
-    # Сохраняем заказ в модель Courier
     courier_order = await sync_to_async(Courier.objects.create)(
         user=user,
         track=product,
@@ -287,10 +305,9 @@ async def process_phone(message: types.Message, state: FSMContext):
         status="Ожидает подтверждения курьером"
     )
 
-    # Отправляем заказ курьеру
     await send_order_to_courier_bot(courier_order.id, product.track, address, phone, product.price)
 
-    await message.answer("🚚 Ваш заказ отправлен курьеру. Ожидайте подтверждения.")
+    await message.answer("🚚 Ваша заявка принята.")
     await state.clear()
 
 async def send_order_to_courier_bot(courier_order_id, track, address, phone, price):
@@ -339,3 +356,5 @@ async def send_order_to_courier_bot(courier_order_id, track, address, phone, pri
                         error_response = await response.text()
             except Exception as e:
                 pass
+
+
