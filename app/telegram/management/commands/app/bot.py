@@ -115,22 +115,42 @@ async def send_about_info(message: types.Message):
 @router.message(lambda message: message.text == "📍 Адреса")
 async def show_address(message: types.Message):
     settings = await sync_to_async(lambda: Settings.objects.first())()
-    if not settings or not settings.address_tg_bot:
+    user = await sync_to_async(lambda: User.objects.get(chat_id=message.chat.id))()
+
+    if not settings or not user.id_user:
         await message.answer("❌ Ошибка: Адрес склада пока не указан.")
         return
-    address_text = BeautifulSoup(settings.address_tg_bot, "html.parser").get_text()
-    address_text = address_text.replace("\xa0", " ")
-    print("После очистки:", repr(address_text))
-    await message.answer(f"📍 *Адрес склада:* \n\n`{address_text}`", parse_mode="MarkdownV2")
-    text = (
+
+    # Формируем текст адреса
+    address_text = f"{settings.address} {user.id_user}\n{settings.phone}"
+    
+    # Функция для экранирования символов Markdown
+    import re
+    def escape_markdown(text):
+        return re.sub(r'([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])', r'\\\1', text)
+
+    # Экранируем текст
+    escaped_address_text = escape_markdown(address_text)
+
+    # Сохраняем адрес в поле address_tg_bot, если он отличается
+    if settings.address_tg_bot != address_text:
+        await sync_to_async(lambda: Settings.objects.filter(pk=settings.pk).update(address_tg_bot=address_text))()
+
+    # Отправляем адрес пользователю
+    await message.answer(f"📍 *Адрес склада:* \n\n`{escaped_address_text}`", parse_mode="MarkdownV2")
+
+    # Дополнительная информация о складе
+    info_text = (
         f"📩 Информация о складе в Кыргызстане 🇰🇬:\n\n"
         f"⚠ Чтобы ваши посылки не потерялись, отправьте скрин заполненного адреса и получите подтверждение от менеджера.\n\n"
         f"❗️❗️❗️ Только после подтверждения ✅ адреса Карго несет ответственность за ваши посылки 📦"
         f"\n\n📞 {settings.phone}"
     )
+
     if settings.watapp:
-        text += f"\n🔗 WhatsApp менеджера: {settings.watapp}"
-    print("Финальный текст перед отправкой:", repr(text))
+        info_text += f"\n🔗 WhatsApp менеджера: {settings.watapp}"
+
+    # Добавляем кнопку WhatsApp, если указан
     keyboard = None
     if settings.watapp:
         keyboard = types.InlineKeyboardMarkup(
@@ -138,7 +158,11 @@ async def show_address(message: types.Message):
                 [types.InlineKeyboardButton(text="WhatsApp менеджера", url=settings.watapp)]
             ]
         )
-    await message.answer(text, reply_markup=keyboard)
+
+    # Отправляем информацию о складе
+    await message.answer(info_text, reply_markup=keyboard)
+
+
 
 @router.message(lambda message: message.text == "⚙️ Поддержка")
 async def send_about_info(message: types.Message):
