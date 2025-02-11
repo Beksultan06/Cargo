@@ -1,7 +1,7 @@
 from aiogram import types, Router
 from aiogram.filters import Command
 from django.conf import settings
-from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_package_options_keyboard, get_profile_buttons
+from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons
 from aiogram.fsm.context import FSMContext
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
@@ -13,10 +13,14 @@ from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from bs4 import BeautifulSoup
 import logging
-from aiogram import Router, types, F
+from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 import aiohttp
-from ..bot_instance import bot_cuorier
+
+# Асинхронная функция для получения настроек
+@sync_to_async
+def get_settings():
+    return Settings.objects.first()
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +37,6 @@ async def start(message: types.Message):
     try:
         # Проверка наличия пользователя в базе данных
         user = await get_user_by_chat_id(chat_id)
-        
         if user:
             # Обновляем chat_id, если он изменился, и показываем главное меню
             await update_chat_id(user, chat_id)
@@ -45,12 +48,10 @@ async def start(message: types.Message):
             # Если пользователь не найден, отправляем кнопку для регистрации
             registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
             logging.info(f"Отправляем ссылку регистрации: {registration_link}")
-            
             await message.answer(
                 "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
                 reply_markup=await get_inline_keyboard(chat_id=chat_id)
             )
-
     except Exception as e:
         logging.error(f"Ошибка при обработке пользователя: {e}")
         await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
@@ -77,6 +78,7 @@ async def send_profile_info(message: types.Message):
         return
 
     pickup_point_name = user.pickup_point.city if user.pickup_point else "Не указан"
+    app_settings = await get_settings()
     text = (
         "📜 *Ваш профиль 📜*\n\n"
         f"🆔 *Персональный ID*: `{user.id_user}`\n"
@@ -85,9 +87,9 @@ async def send_profile_info(message: types.Message):
         f"🏡 *Адрес*: {user.address}\n\n"
         f"📍 *ПВЗ*: {pickup_point_name}\n"
         f"📍 *ПВЗ телефон*: [996505180600](tel:996558486448)\n"
-        "📍 *Часы работы*: \n"
-        "📍 *Локация на Карте*: \n\n"
-        "[🌍 LiderCargo (WhatsApp)](https://www.youtube.com/)"
+        f"📍 *Часы работы*: \n"
+        f"📍 *Локация на Карте*: \n\n"
+        f"[🌍 LiderCargo (WhatsApp)]({app_settings.watapp})"
     )
     await message.answer(text, parse_mode="Markdown", reply_markup=await get_profile_buttons(chat_id))
 
