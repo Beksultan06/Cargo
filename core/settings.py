@@ -29,6 +29,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "8b80-158-181-248-104.ngrok-free.app",
+    "127.0.0.1",
+    "localhost"
+]
 # Application definition
 
 INSTALLED_APPS = [

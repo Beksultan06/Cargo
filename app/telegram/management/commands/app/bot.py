@@ -1,21 +1,25 @@
 from aiogram import types, Router
 from aiogram.filters import Command
 from django.conf import settings
-from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_package_options_keyboard, get_profile_buttons
+from app.telegram.management.commands.app.button import get_inline_keyboard, get_main_menu, get_profile_buttons
 from aiogram.fsm.context import FSMContext
 from app.telegram.management.commands.app.db import get_user_by_chat_id, update_chat_id
 from asgiref.sync import sync_to_async
+from aiogram.enums import ParseMode
 from app.telegram.management.commands.app.states import TrackState
 from app.web_app.models import Product, ProductStatus, Settings, User, CourierUser, Courier
 from app.telegram.management.commands.run import bot
 from django.db import transaction
 from django.utils.html import strip_tags
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from bs4 import BeautifulSoup
-from aiogram import Router, types, F
+from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 import aiohttp
-from aiogram.enums import ParseMode
+
+# Асинхронная функция для получения настроек
+@sync_to_async
+def get_settings():
+    return Settings.objects.first()
 
 
 router = Router()
@@ -61,7 +65,6 @@ async def start(message: types.Message):
     chat_id = message.chat.id
     try:
         user = await get_user_by_chat_id(chat_id)
-        
         if user:
             await update_chat_id(user, chat_id)
             await message.answer(
@@ -70,12 +73,10 @@ async def start(message: types.Message):
             )
         else:
             registration_link = f'{settings.SITE_BASE_URL}/register/?chat_id={chat_id}'
-            
             await message.answer(
                 "⚠️ Вы не зарегистрированы.\nПожалуйста, пройдите регистрацию через веб-приложение.",
                 reply_markup=await get_inline_keyboard(chat_id=chat_id)
             )
-
     except Exception as e:
         await message.answer("❌ Произошла ошибка при обработке данных. Попробуйте позже.")
 
@@ -99,6 +100,7 @@ async def send_profile_info(message: types.Message):
         return
 
     pickup_point_name = user.pickup_point.city if user.pickup_point else "Не указан"
+    app_settings = await get_settings()
     text = (
         "📜 *Ваш профиль 📜*\n\n"
         f"🆔 *Персональный ID*: `{user.id_user}`\n"
@@ -107,9 +109,9 @@ async def send_profile_info(message: types.Message):
         f"🏡 *Адрес*: {user.address}\n\n"
         f"📍 *ПВЗ*: {pickup_point_name}\n"
         f"📍 *ПВЗ телефон*: [996505180600](tel:996558486448)\n"
-        "📍 *Часы работы*: \n"
-        "📍 *Локация на Карте*: \n\n"
-        "[🌍 LiderCargo (WhatsApp)](https://www.youtube.com/)"
+        f"📍 *Часы работы*: \n"
+        f"📍 *Локация на Карте*: \n\n"
+        f"[🌍 LiderCargo (WhatsApp)]({app_settings.watapp})"
     )
     await message.answer(text, parse_mode="Markdown", reply_markup=await get_profile_buttons(chat_id))
 
@@ -135,22 +137,42 @@ async def send_about_info(message: types.Message):
 @router.message(lambda message: message.text == "📍 Адреса")
 async def show_address(message: types.Message):
     settings = await sync_to_async(lambda: Settings.objects.first())()
-    if not settings or not settings.address_tg_bot:
+    user = await sync_to_async(lambda: User.objects.get(chat_id=message.chat.id))()
+
+    if not settings or not user.id_user:
         await message.answer("❌ Ошибка: Адрес склада пока не указан.")
         return
-    address_text = BeautifulSoup(settings.address_tg_bot, "html.parser").get_text()
-    address_text = address_text.replace("\xa0", " ")
-    print("После очистки:", repr(address_text))
-    await message.answer(f"📍 *Адрес склада:* \n\n`{address_text}`", parse_mode="MarkdownV2")
-    text = (
+
+    # Формируем текст адреса
+    address_text = f"{settings.address} {user.id_user}\n{settings.phone}"
+    
+    # Функция для экранирования символов Markdown
+    import re
+    def escape_markdown(text):
+        return re.sub(r'([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])', r'\\\1', text)
+
+    # Экранируем текст
+    escaped_address_text = escape_markdown(address_text)
+
+    # Сохраняем адрес в поле address_tg_bot, если он отличается
+    if settings.address_tg_bot != address_text:
+        await sync_to_async(lambda: Settings.objects.filter(pk=settings.pk).update(address_tg_bot=address_text))()
+
+    # Отправляем адрес пользователю
+    await message.answer(f"📍 *Адрес склада:* \n\n`{escaped_address_text}`", parse_mode="MarkdownV2")
+
+    # Дополнительная информация о складе
+    info_text = (
         f"📩 Информация о складе в Кыргызстане 🇰🇬:\n\n"
         f"⚠ Чтобы ваши посылки не потерялись, отправьте скрин заполненного адреса и получите подтверждение от менеджера.\n\n"
         f"❗️❗️❗️ Только после подтверждения ✅ адреса Карго несет ответственность за ваши посылки 📦"
         f"\n\n📞 {settings.phone}"
     )
+
     if settings.watapp:
-        text += f"\n🔗 WhatsApp менеджера: {settings.watapp}"
-    print("Финальный текст перед отправкой:", repr(text))
+        info_text += f"\n🔗 WhatsApp менеджера: {settings.watapp}"
+
+    # Добавляем кнопку WhatsApp, если указан
     keyboard = None
     if settings.watapp:
         keyboard = types.InlineKeyboardMarkup(
@@ -158,7 +180,11 @@ async def show_address(message: types.Message):
                 [types.InlineKeyboardButton(text="WhatsApp менеджера", url=settings.watapp)]
             ]
         )
-    await message.answer(text, reply_markup=keyboard)
+
+    # Отправляем информацию о складе
+    await message.answer(info_text, reply_markup=keyboard)
+
+
 
 @router.message(lambda message: message.text == "⚙️ Поддержка")
 async def send_about_info(message: types.Message):
