@@ -85,10 +85,8 @@ class ProductAdmin(admin.ModelAdmin):
         custom_urls = [
             path('monthly-report/', self.admin_site.admin_view(self.monthly_report), name='monthly-report'),
             path('monthly-report/<int:year>/<int:month>/', self.admin_site.admin_view(self.month_detail), name='month-detail'),
-            path('monthly-report/<int:year>/<int:month>/<int:day>/', self.admin_site.admin_view(self.day_detail), name='day-detail'),
             path('export-monthly-report/', self.admin_site.admin_view(self.export_monthly_report), name='export-monthly-report'),
             path('export-month-report/<int:year>/<int:month>/', self.admin_site.admin_view(self.export_month_report), name='export-month-report'),
-            path('export-day-report/<int:year>/<int:month>/<int:day>/', self.admin_site.admin_view(self.export_day_report), name='export-day-report'),
         ]
         return custom_urls + urls
 
@@ -151,33 +149,6 @@ class ProductAdmin(admin.ModelAdmin):
 
         return render(request, 'admin/month_detail.html', context)
 
-    def day_detail(self, request, year, month, day):
-        from django.db.models import Sum
-
-        # Создаем начальную и конечную границу для дня
-        start_datetime = datetime(year, month, day)
-        
-        end_datetime = start_datetime + timedelta(days=1)
-
-        # Делаем даты aware, если это необходимо
-        if timezone.is_naive(start_datetime):
-            start_datetime = timezone.make_aware(start_datetime)
-            end_datetime = timezone.make_aware(end_datetime)
-
-        # Фильтрация по временному диапазону
-        products = Product.objects.filter(created_at__gte=start_datetime, created_at__lt=end_datetime)
-
-        total_sum = products.aggregate(total=Sum('price'))['total'] or 0
-
-        context = {
-            'products': products,
-            'total_sum': total_sum,
-            'date': start_datetime
-        }
-
-        return render(request, 'admin/day_detail.html', context)
-
-
     # Экспорт месячного отчета
     def export_monthly_report(self, request):
         products = Product.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('price')).order_by('-month')
@@ -208,26 +179,6 @@ class ProductAdmin(admin.ModelAdmin):
             sheet.append([f'{i} неделя', weekly_sum, start_date.strftime('%d-%m-%Y'), end_date.strftime('%d-%m-%Y')])
 
         return self._create_excel_response(workbook, f'month_report_{year}_{month}.xlsx')
-
-    # Экспорт отчета за день
-    def export_day_report(self, request, year, month, day):
-        date = datetime(year, month, day)
-        products = Product.objects.filter(created_at__date=date)
-
-        workbook = Workbook()
-        sheet = workbook.active
-        sheet_title = f'Отчет за {date.strftime("%d-%m-%Y")}'
-        sheet.title = sheet_title[:31]
-
-        sheet.append(['Трек-номер', 'Вес (кг)', 'Цена (сом)', 'Статус'])
-        for product in products:
-            sheet.append([product.track, product.weight, product.price, product.status])
-
-        total_sum = products.aggregate(total=Sum('price'))['total'] or 0
-        sheet.append([])
-        sheet.append(['Общая сумма', total_sum])
-
-        return self._create_excel_response(workbook, f'day_report_{year}_{month}_{day}.xlsx')
 
     # Вспомогательный метод для создания Excel-ответа
     def _create_excel_response(self, workbook, filename):

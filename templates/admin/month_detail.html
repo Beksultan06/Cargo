@@ -168,9 +168,7 @@
         {% for week in report_data %}
         <tr>
             <td>
-                <a href="{% url 'admin:day-detail' year month week.start_date.day %}">
                     {{ week.week }} ({{ week.start_date|date:"d M" }} - {{ week.end_date|date:"d M" }})
-                </a>
             </td>
             <td>{{ week.amount|floatformat:2 }} сом</td>
         </tr>
