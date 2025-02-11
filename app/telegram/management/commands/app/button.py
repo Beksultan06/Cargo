@@ -3,12 +3,10 @@ from django.conf import settings
 from asgiref.sync import sync_to_async
 from app.web_app.models import User, Settings
 
-# Асинхронная функция для получения настроек
 @sync_to_async
 def get_settings():
     return Settings.objects.first()
 
-# Основная клавиатура с проверкой пользователя
 async def get_inline_keyboard(chat_id=None):
     app_settings = await get_settings()
     buttons = [
