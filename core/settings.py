@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-SITE_BASE_URL="https://lidercargo.webtm.ru"
+SITE_BASE_URL="https://8b80-158-181-248-104.ngrok-free.app"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -48,7 +48,7 @@ INSTALLED_APPS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://lidercargo.webtm.ru"
+    "https://8b80-158-181-248-104.ngrok-free.app"
 ]
 
 LOGIN_URL = '/cargopart/'
@@ -95,15 +95,23 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'psqlextra.backend',
-        'NAME': 'we_new',
-        'USER': 'postgres',
-        'PASSWORD': '12345678',
-        'HOST': 'localhost',
-        'PORT': 5432,
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'psqlextra.backend',
+#         'NAME': 'we_new',
+#         'USER': 'postgres',
+#         'PASSWORD': '12345678',
+#         'HOST': 'localhost',
+#         'PORT': 5432,
+#     }
+# }
 
 LOGGING = {
     'version': 1,
