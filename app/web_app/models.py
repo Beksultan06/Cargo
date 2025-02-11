@@ -219,13 +219,6 @@ class Product(models.Model):
         ordering = ['-created_at']
 
 
-class Notification(models.Model):
-    text = RichTextField(verbose_name='Текст')
-
-    class Meta:
-        verbose_name_plural = 'Уведомление'
-
-# Определим типы платежей
 PAYMENT_CHOICES = (
     ("MBANK", "MBANK"),
     ("Наличный", "Наличный"),
