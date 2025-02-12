@@ -97,7 +97,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'psqlextra.backend',
-        'NAME': 'leder',
+        'NAME': 'lider',
         'USER': 'postgres',
         'PASSWORD': '12345678',
         'HOST': 'localhost',

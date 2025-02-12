@@ -246,7 +246,6 @@
                 });
         
                 let data = await response.json();
-                console.log("Ответ от сервера:", data);  // Лог для проверки данных от сервера
         
                 if (data.success) {
                     barcodeResult.innerHTML = `✅ ${data.message}`;
@@ -263,7 +262,7 @@
                     if (data.redirect) {
                         setTimeout(() => {
                             startScan();
-                        }, 1500);
+                        }, 1000);
                     }
                 } else {
                     barcodeResult.innerHTML = `❌ ${data.error}`;
