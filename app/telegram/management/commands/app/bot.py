@@ -326,7 +326,7 @@ async def send_order_to_courier_bot(courier_order_id, track, address, phone, pri
         return
 
     # Форматируем цену с двумя знаками после запятой
-    formatted_price = f"{price:.2f}$"
+    formatted_price = f"{price:.2f}сом"
 
     message = (
         f"🚚 *Новый заказ на доставку!*\n"
