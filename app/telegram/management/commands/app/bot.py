@@ -331,7 +331,7 @@ async def send_order_to_courier_bot(courier_order_id, track, address, phone, pri
     message = (
         f"🚚 *Новый заказ на доставку!*\n"
         f"📦 Трек-номер: {track}\n"
-        f"📍 Адрес: {address}\n"
+        f"📍 Адрес: {address}\n" 
         f"📞 Телефон: {phone}\n"
         f"💰 Сумма к оплате: *{formatted_price}*\n\n"
         f"Нажмите кнопку ниже, чтобы принять заказ."
