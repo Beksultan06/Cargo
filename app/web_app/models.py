@@ -135,6 +135,8 @@ class Settings(models.Model):
     logo = models.ImageField(upload_to='image/', verbose_name="Логотип")
     address = models.CharField(max_length=100, verbose_name="Адрес склада в китае")
     phone = models.CharField(max_length=50, verbose_name="Номер телефона склада в Китае", help_text="Тут нужен рабочий номер склада в Китае")
+    phone_pvz = models.CharField(max_length=50, verbose_name="Номер телефона склада в Кыргызстане", help_text="Тут нужен рабочий номер склада в Кыргызстане")
+    address_pvz = models.URLField(verbose_name='Ссылку на карту', blank=True, null=True) 
     price = models.FloatField(verbose_name='Цена за кг')
     ista = models.URLField(verbose_name='Инстаграмм', blank=True, null=True)
     watapp = models.URLField(verbose_name='Ватсап', blank=True, null=True)

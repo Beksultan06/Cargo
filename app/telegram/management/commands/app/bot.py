@@ -109,9 +109,9 @@ async def send_profile_info(message: types.Message):
         f"📞 *Номер*: `{user.phone_number}`\n"
         f"🏡 *Адрес*: {user.address}\n\n"
         f"📍 *ПВЗ*: {pickup_point_name}\n"
-        f"📍 *ПВЗ телефон*: {app_settings.phone}\n"
+        f"📍 *ПВЗ телефон*: {app_settings.phone_pvz}\n"
         f"📍 *Часы работы*: {app_settings.date}\n"
-        f"📍 *Локация на Карте*: {app_settings.address}\n\n"
+        f"📍 *Локация на Карте*: {app_settings.address_pvz}\n\n"
         f"[🌍 LiderCargo (WhatsApp)]({app_settings.watapp})"
     )
     await message.answer(text, parse_mode="Markdown", reply_markup=await get_profile_buttons(chat_id))
